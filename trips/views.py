@@ -1,8 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from drf_spectacular.utils import extend_schema
 
-from .serializers import TripInputSerializer
+from .serializers import TripInputSerializer, TripOutputSerializer
 from .routing import geocode, get_route
 from .hos_engine import simulate_trip
 
@@ -17,6 +18,10 @@ class PlanRouteView(APIView):
 
     serializer_class = TripInputSerializer
 
+    @extend_schema(
+        request=TripInputSerializer,
+        responses={200: TripOutputSerializer},
+    )
     def post(self, request):
         serializer = TripInputSerializer(data=request.data)
         if not serializer.is_valid():
