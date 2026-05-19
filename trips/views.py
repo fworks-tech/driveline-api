@@ -15,6 +15,8 @@ class PlanRouteView(APIView):
     runs HOS simulation, and returns full trip data.
     """
 
+    serializer_class = TripInputSerializer
+
     def post(self, request):
         serializer = TripInputSerializer(data=request.data)
         if not serializer.is_valid():
