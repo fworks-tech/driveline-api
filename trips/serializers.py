@@ -27,15 +27,11 @@ class LogbookDaySerializer(serializers.Serializer):
     events = LogbookEventSerializer(many=True)
 
 
-class LegSerializer(serializers.Serializer):
-    distance_miles = serializers.FloatField()
-    duration_hours = serializers.FloatField()
-
-
 class TripSummarySerializer(serializers.Serializer):
     total_distance_miles = serializers.FloatField()
+    total_trip_hours = serializers.FloatField()
     total_drive_hours = serializers.FloatField()
-    legs = LegSerializer(many=True)
+    legs = serializers.IntegerField()
     rest_stops = serializers.IntegerField()
     fuel_stops = serializers.IntegerField()
 
