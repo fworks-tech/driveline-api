@@ -83,20 +83,42 @@ class PlanRouteView(APIView):
             )
             markers.extend(stop_markers)
 
+            # 6. Transform logbook to match spec: convert hours to minutes, date_offset to day
+            logbook_days_transformed = []
+            for day_idx, day in enumerate(logbook["logbook_days"]):
+                events_transformed = []
+                for ev in day["events"]:
+                    events_transformed.append({
+                        "status": ev["status"],
+                        "start_minute": int(ev["start_hour"] * 60),
+                        "duration_minutes": int((ev["end_hour"] - ev["start_hour"]) * 60),
+                        "label": ev["label"],
+                    })
+                logbook_days_transformed.append({
+                    "day": day_idx + 1,
+                    "events": events_transformed,
+                })
+
             return Response(
                 {
                     "route_coordinates": route["coordinates"],
                     "markers": markers,
-                    "logbook_days": logbook["logbook_days"],
+                    "logbook_days": logbook_days_transformed,
                     "trip_summary": {
-                        "total_miles": round(total_miles, 1),
-                        "total_trip_hours": round(logbook["total_trip_hours"], 1),
-                        "total_driving_hours": round(logbook["total_driving_hours"], 1),
-                        "num_days": len(logbook["logbook_days"]),
-                        "num_fuel_stops": logbook["num_fuel_stops"],
-                        "num_rest_stops": logbook["num_rest_stops"],
-                        "leg1_miles": round(leg1["distance_miles"], 1),
-                        "leg2_miles": round(leg2["distance_miles"], 1),
+                        "total_distance_miles": round(total_miles, 1),
+                        "total_drive_hours": round(logbook["total_driving_hours"], 1),
+                        "legs": [
+                            {
+                                "distance_miles": round(leg1["distance_miles"], 1),
+                                "duration_hours": round(leg1["duration_hours"], 1),
+                            },
+                            {
+                                "distance_miles": round(leg2["distance_miles"], 1),
+                                "duration_hours": round(leg2["duration_hours"], 1),
+                            },
+                        ],
+                        "rest_stops": logbook["num_rest_stops"],
+                        "fuel_stops": logbook["num_fuel_stops"],
                     },
                 }
             )
@@ -122,17 +144,17 @@ def _build_stop_markers(
     if total_trip_hours <= 0 or not coordinates:
         return []
 
-    # Flatten all events
+    # Flatten all events with absolute hours
     all_events = []
     for day in logbook_days:
-        offset = day["date_offset"] * 24.0
+        day_offset_hours = day["date_offset"] * 24.0
         for ev in day["events"]:
             all_events.append(
                 {
                     "status": ev["status"],
                     "label": ev["label"],
-                    "abs_start": ev["start_hour"] + offset,
-                    "abs_end": ev["end_hour"] + offset,
+                    "abs_start": ev["start_hour"] + day_offset_hours,
+                    "abs_end": ev["end_hour"] + day_offset_hours,
                 }
             )
 
