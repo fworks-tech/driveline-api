@@ -47,7 +47,7 @@ class PlanRouteView(APIView):
                 total_distance_miles=total_miles,
                 leg1_hours=leg1["duration_hours"],
                 leg2_hours=leg2["duration_hours"],
-                current_cycle_used_hours=data["current_cycle_used"],
+                current_cycle_used_hours=data["cycle_hours_used"],
                 leg1_miles=leg1["distance_miles"],
                 leg2_miles=leg2["distance_miles"],
             )
@@ -57,7 +57,7 @@ class PlanRouteView(APIView):
                 {
                     "lat": current_ll[0],
                     "lon": current_ll[1],
-                    "type": "current",
+                    "type": "start",
                     "label": data["current_location"],
                 },
                 {
