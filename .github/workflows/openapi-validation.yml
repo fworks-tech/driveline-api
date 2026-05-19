@@ -1,0 +1,72 @@
+name: OpenAPI Validation
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'backend/docs/openapi.yaml'
+      - 'spotter/**/*.py'
+      - 'trips/**/*.py'
+      - 'requirements.txt'
+      - 'scripts/validate_openapi.py'
+      - '.github/workflows/openapi-validation.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'backend/docs/openapi.yaml'
+      - 'spotter/**/*.py'
+      - 'trips/**/*.py'
+      - 'requirements.txt'
+      - 'scripts/validate_openapi.py'
+
+jobs:
+  validate-openapi:
+    runs-on: ubuntu-latest
+    name: Validate OpenAPI Spec Compliance
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Generate OpenAPI schema from code
+        run: |
+          python manage.py spectacular --file /tmp/generated_schema.json
+        env:
+          DJANGO_SETTINGS_MODULE: spotter.settings
+
+      - name: Validate schema format
+        run: |
+          python -c "import json; json.load(open('/tmp/generated_schema.json'))"
+
+      - name: Compare schemas
+        run: |
+          python scripts/validate_openapi.py docs/openapi.yaml /tmp/generated_schema.json
+        continue-on-error: false
+
+      - name: Report validation success
+        if: success()
+        run: |
+          echo "✅ OpenAPI spec is 100% compliant with implementation"
+          echo "- All endpoints implemented"
+          echo "- All schemas match code"
+          echo "- No breaking changes detected"
+
+      - name: Report validation failure
+        if: failure()
+        run: |
+          echo "❌ OpenAPI spec validation failed"
+          echo "Review the errors above and update either:"
+          echo "  1. docs/openapi.yaml (if spec should change)"
+          echo "  2. Your implementation (if code should change)"
+          exit 1
