@@ -41,7 +41,7 @@ jobs:
 
       - name: Generate OpenAPI schema from code
         run: |
-          python manage.py spectacular --file /tmp/generated_schema.json
+          python manage.py spectacular --file /tmp/generated_schema.json --format openapi-json
         env:
           DJANGO_SETTINGS_MODULE: spotter.settings
 
