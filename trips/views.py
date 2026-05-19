@@ -106,17 +106,9 @@ class PlanRouteView(APIView):
                     "logbook_days": logbook_days_transformed,
                     "trip_summary": {
                         "total_distance_miles": round(total_miles, 1),
+                        "total_trip_hours": round(logbook["total_trip_hours"], 1),
                         "total_drive_hours": round(logbook["total_driving_hours"], 1),
-                        "legs": [
-                            {
-                                "distance_miles": round(leg1["distance_miles"], 1),
-                                "duration_hours": round(leg1["duration_hours"], 1),
-                            },
-                            {
-                                "distance_miles": round(leg2["distance_miles"], 1),
-                                "duration_hours": round(leg2["duration_hours"], 1),
-                            },
-                        ],
+                        "legs": 2,  # Two legs: current->pickup, pickup->dropoff
                         "rest_stops": logbook["num_rest_stops"],
                         "fuel_stops": logbook["num_fuel_stops"],
                     },
