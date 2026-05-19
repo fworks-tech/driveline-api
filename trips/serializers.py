@@ -17,25 +17,27 @@ class MarkerSerializer(serializers.Serializer):
 
 class LogbookEventSerializer(serializers.Serializer):
     status = serializers.CharField(max_length=50)
-    start_hour = serializers.FloatField()
-    end_hour = serializers.FloatField()
+    start_minute = serializers.IntegerField()
+    duration_minutes = serializers.IntegerField()
     label = serializers.CharField(max_length=255)
 
 
 class LogbookDaySerializer(serializers.Serializer):
-    date_offset = serializers.IntegerField()
+    day = serializers.IntegerField()
     events = LogbookEventSerializer(many=True)
 
 
+class LegSerializer(serializers.Serializer):
+    distance_miles = serializers.FloatField()
+    duration_hours = serializers.FloatField()
+
+
 class TripSummarySerializer(serializers.Serializer):
-    total_miles = serializers.FloatField()
-    total_trip_hours = serializers.FloatField()
-    total_driving_hours = serializers.FloatField()
-    num_days = serializers.IntegerField()
-    num_fuel_stops = serializers.IntegerField()
-    num_rest_stops = serializers.IntegerField()
-    leg1_miles = serializers.FloatField()
-    leg2_miles = serializers.FloatField()
+    total_distance_miles = serializers.FloatField()
+    total_drive_hours = serializers.FloatField()
+    legs = LegSerializer(many=True)
+    rest_stops = serializers.IntegerField()
+    fuel_stops = serializers.IntegerField()
 
 
 class TripOutputSerializer(serializers.Serializer):
