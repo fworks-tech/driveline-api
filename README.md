@@ -1,9 +1,42 @@
 # Spotter AI ELD & Route Planner — Django Backend API
 
+**Status:** ✅ v1.0.0-alpha-api  
 **Backend Repository:** `spotter-eld-logging-api`  
 **Frontend Repository:** [`spotter-eld-logging-app`](https://github.com/fworks-tech/spotter-eld-logging-app)
 
 Production-ready Django REST Framework API for the Spotter AI ELD & Route Planner application. Handles geocoding, route planning, and FMCSA Hours of Service (HOS) compliance calculations.
+
+> **Alpha Release Notice:** This is an alpha release. Core API functionality is stable, but implementation details may change. See [Release Notes](#release-notes) for details.
+
+## Release Notes
+
+### v1.0.0-alpha-api (May 19, 2026)
+
+**✅ Features Implemented:**
+- OpenAPI 3.0 schema generation (drf-spectacular)
+- Automated OpenAPI validation on CI/CD
+- Complete trip planning endpoint
+- Route calculation (OSRM integration)
+- HOS simulation engine
+- ELD logbook generation
+- Multi-day trip support
+- 8 unit tests passing
+- CI/CD validation
+
+**🚧 Known Limitations:**
+- Error handling without circuit breakers (Phase 2)
+- No rate limiting yet (Phase 2)
+- Nominatim geocoding may rate limit (use custom service in production)
+- No database persistence of trips (in-memory calculations only)
+
+**📋 Next Steps:**
+- Phase 2: Error handling with circuit breakers
+- Phase 2: Enhanced logging and monitoring
+- Phase 2: Operations runbook
+
+For detailed changelog, see [CHANGELOG.md](docs/CHANGELOG.md).
+
+---
 
 ## Technology Stack
 
