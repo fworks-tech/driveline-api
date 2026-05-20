@@ -194,22 +194,26 @@ CORS_ALLOWED_ORIGINS=http://localhost:3000,https://spotter-eld.app
 
 ## Testing
 
+### Quick Start
 ```bash
-# Run all tests
-python manage.py test
+# Run all tests with coverage
+pytest trips/tests/ -v --cov=trips --cov-report=html
 
-# Run with coverage
-coverage run --source='.' manage.py test trips
-coverage report
-coverage html  # Generate HTML report
+# Watch mode (auto-rerun on file changes)
+pytest trips/tests/ -v --watch
 
-# Run specific test file
-python manage.py test trips.tests.test_hos_engine
+# Run specific test
+pytest trips/tests/test_integration.py::TestTripPlanningIntegration::test_successful_route_planning_end_to_end -v
 ```
 
-**Coverage Targets:**
-- Unit tests: 70%+
-- Integration tests: 60%+
+**Coverage:** ✅ 87% (Target: 70%+)
+
+### Test Suites
+- **Unit Tests** (12) — Fast validation of individual components
+- **Integration Tests** (6) — Full workflow testing with mocked APIs
+- **CI/CD** — Automated tests on every push
+
+For complete testing guide, see [docs/TESTING.md](docs/TESTING.md).
 
 ## Deployment
 
@@ -295,7 +299,11 @@ kill -9 <PID>
 - [API Contract](docs/API_CONTRACT.md) — Authoritative request/response schemas and validation rules
 - [Architecture](docs/ARCHITECTURE.md) — System design, request flow, layered components
 - [HOS Engine Technical Reference](docs/HOS_ENGINE.md) — Deep dive into FMCSA Hours of Service simulation engine
+- [Testing Guide](docs/TESTING.md) — Unit tests, integration tests, coverage reporting, CI/CD
+
+### Quality & Reports
 - [OpenAPI Validation](docs/OPENAPI_VALIDATION.md) — How spec validation works in CI/CD
+- [Test Report Template](docs/TEST_REPORT_TEMPLATE.md) — Comprehensive test results and metrics
 
 ### External Documentation
 - [Deployment Strategy](../DEVOPS_STRATEGY.md)
