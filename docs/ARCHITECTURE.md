@@ -2,7 +2,7 @@
 
 **Document Purpose:** Source of truth for backend system design  
 **Audience:** Developers, architects, AI agents  
-**Last Updated:** 2026-05-19
+**Last Updated:** 2026-05-20
 
 ---
 
@@ -74,8 +74,14 @@ spotter-eld-logging-api/
 ├── pytest.ini                   # Pytest configuration
 ├── requirements.txt             # Python dependencies
 ├── .env.example                 # Environment variables template
-├── ARCHITECTURE.md              # This file
-└── README.md                    # API documentation
+├── README.md                    # API documentation
+└── docs/
+    ├── ARCHITECTURE.md          # This file
+    ├── API_CONTRACT.md          # API contract reference
+    ├── HOS_ENGINE.md            # HOS engine reference
+    ├── CHANGELOG.md
+    ├── openapi.yaml
+    └── OPENAPI_VALIDATION.md
 ```
 
 ---
@@ -348,23 +354,23 @@ def get_route(origin, waypoint, destination):
 class TripInputSerializer(serializers.Serializer):
     current_location = serializers.CharField(
         min_length=2,
-        max_length=255,
+        max_length=500,
         help_text="Starting location (e.g., Chicago, IL)"
     )
     pickup_location = serializers.CharField(
         min_length=2,
-        max_length=255,
+        max_length=500,
         help_text="Pickup location"
     )
     dropoff_location = serializers.CharField(
         min_length=2,
-        max_length=255,
+        max_length=500,
         help_text="Dropoff/destination location"
     )
-    cycle_hours_used = serializers.IntegerField(
-        min_value=0,
-        max_value=70,
-        help_text="Hours already used in current 8-day cycle (0-70)"
+    cycle_hours_used = serializers.FloatField(
+        min_value=0.0,
+        max_value=70.0,
+        help_text="Hours already used in current 8-day cycle (0.0-70.0)"
     )
 ```
 
@@ -372,10 +378,10 @@ class TripInputSerializer(serializers.Serializer):
 
 | Field | Rule | Example |
 |-------|------|---------|
-| **current_location** | 2-255 chars | "Chicago, IL" |
-| **pickup_location** | 2-255 chars | "Indianapolis, IN" |
-| **dropoff_location** | 2-255 chars | "Dallas, TX" |
-| **cycle_hours_used** | 0-70 | 30 |
+| **current_location** | 2-500 chars | "Chicago, IL" |
+| **pickup_location** | 2-500 chars | "Indianapolis, IN" |
+| **dropoff_location** | 2-500 chars | "Dallas, TX" |
+| **cycle_hours_used** | 0.0-70.0 (float) | 30.5 |
 
 ---
 
@@ -387,7 +393,7 @@ class TripInputSerializer(serializers.Serializer):
 class TripSummarySerializer(serializers.Serializer):
     route_coordinates = serializers.ListField(
         child=serializers.ListField(child=serializers.FloatField()),
-        help_text="Route polyline as [lat, lon] pairs"
+        help_text="Route polyline as [lon, lat] pairs (GeoJSON / OSRM order)"
     )
     markers = serializers.ListField(
         child=MarkerSerializer(),
@@ -627,7 +633,7 @@ CORS_ALLOWED_ORIGINS=https://spotter-eld.app,https://staging-spotter.vercel.app
 
 ---
 
-**Architecture Source of Truth:** This document  
-**Last Review:** 2026-05-19  
+**Architecture Source of Truth:** This document (docs/ARCHITECTURE.md)  
+**Last Review:** 2026-05-20  
 **Maintained by:** Backend team  
 **AI Agent Reference:** ✅ Approved for agent automation
