@@ -26,36 +26,60 @@ class TestTripPlanningIntegration:
         """Test complete trip planning with mocked external APIs."""
         # Mock geocoding responses
         mock_geocode.side_effect = [
+<<<<<<< HEAD
             (41.8781, -87.6298),  # Chicago, IL
             (39.7684, -86.1581),  # Indianapolis, IN
             (32.7767, -96.797),  # Dallas, TX
+=======
+            (41.8781, -87.6298),    # Chicago, IL
+            (39.7684, -86.1581),    # Indianapolis, IN
+            (32.7767, -96.797),     # Dallas, TX
+>>>>>>> 249df52 (test: add comprehensive integration tests for trip planning API)
         ]
 
         # Mock routing responses with realistic data
         mock_route.side_effect = [
             {
+<<<<<<< HEAD
                 "coordinates": [
+=======
+                'coordinates': [
+>>>>>>> 249df52 (test: add comprehensive integration tests for trip planning API)
                     [-87.6298, 41.8781],
                     [-87.0, 40.0],
                     [-86.1581, 39.7684],
                 ],
+<<<<<<< HEAD
                 "distance_miles": 297.3,
                 "duration_hours": 4.5,
             },
             {
                 "coordinates": [
+=======
+                'distance_miles': 297.3,
+                'duration_hours': 4.5,
+            },
+            {
+                'coordinates': [
+>>>>>>> 249df52 (test: add comprehensive integration tests for trip planning API)
                     [-86.1581, 39.7684],
                     [-90.0, 35.0],
                     [-96.797, 32.7767],
                 ],
+<<<<<<< HEAD
                 "distance_miles": 552.7,
                 "duration_hours": 8.0,
+=======
+                'distance_miles': 552.7,
+                'duration_hours': 8.0,
+>>>>>>> 249df52 (test: add comprehensive integration tests for trip planning API)
             },
         ]
 
         # Submit request
         response = self.client.post(
             self.endpoint,
+<<<<<<< HEAD
             data=json.dumps(
                 {
                     "current_location": "Chicago, IL",
@@ -65,6 +89,15 @@ class TestTripPlanningIntegration:
                 }
             ),
             content_type="application/json",
+=======
+            data=json.dumps({
+                'current_location': 'Chicago, IL',
+                'pickup_location': 'Indianapolis, IN',
+                'dropoff_location': 'Dallas, TX',
+                'cycle_hours_used': 30.0,
+            }),
+            content_type='application/json',
+>>>>>>> 249df52 (test: add comprehensive integration tests for trip planning API)
         )
 
         # Assert successful response
@@ -72,6 +105,7 @@ class TestTripPlanningIntegration:
         data = response.json()
 
         # Verify response structure
+<<<<<<< HEAD
         assert "route_coordinates" in data
         assert "markers" in data
         assert "logbook_days" in data
@@ -113,12 +147,57 @@ class TestTripPlanningIntegration:
                 }
             ),
             content_type="application/json",
+=======
+        assert 'route_coordinates' in data
+        assert 'markers' in data
+        assert 'logbook_days' in data
+        assert 'trip_summary' in data
+
+        # Verify markers
+        assert len(data['markers']) >= 3  # start, pickup, dropoff
+        assert any(m['type'] == 'start' for m in data['markers'])
+        assert any(m['type'] == 'pickup' for m in data['markers'])
+        assert any(m['type'] == 'dropoff' for m in data['markers'])
+
+        # Verify logbook
+        assert len(data['logbook_days']) >= 1
+        assert all('day' in d and 'events' in d for d in data['logbook_days'])
+
+        # Verify trip summary
+        summary = data['trip_summary']
+        assert 'total_distance_miles' in summary
+        assert 'total_trip_hours' in summary
+        assert 'total_drive_hours' in summary
+        assert 'legs' in summary
+        assert summary['legs'] == 2
+
+    @patch('trips.routing.get_route')
+    @patch('trips.routing.geocode')
+    def test_invalid_location_returns_400(self, mock_geocode, mock_route):
+        """Test that invalid/non-geocodable location returns 400 error."""
+        # Simulate geocoding failure
+        mock_geocode.side_effect = ValueError('Address not found')
+
+        response = self.client.post(
+            self.endpoint,
+            data=json.dumps({
+                'current_location': 'InvalidLocationXYZ123',
+                'pickup_location': 'Indianapolis, IN',
+                'dropoff_location': 'Dallas, TX',
+                'cycle_hours_used': 30.0,
+            }),
+            content_type='application/json',
+>>>>>>> 249df52 (test: add comprehensive integration tests for trip planning API)
         )
 
         # Should return 400 Bad Request
         assert response.status_code == 400
         data = response.json()
+<<<<<<< HEAD
         assert "error" in data or "detail" in data
+=======
+        assert 'error' in data or 'detail' in data
+>>>>>>> 249df52 (test: add comprehensive integration tests for trip planning API)
 
     def test_missing_required_fields_returns_400(self):
         """Test that missing required fields return 400 error."""

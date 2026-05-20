@@ -1,0 +1,293 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Workflow Standards
+
+### Commits & Pull Requests
+- **Commits must be smart, granular, and follow Conventional Commits** — one logical change per commit
+- **Branch per GitHub issue** — format: `feat/issue-123-name` or `fix/issue-456-name`
+- **One PR per issue** — 1:1:1 mapping (issue → branch → PR)
+- **Close issues after merge** — manually verify closure; do not leave follow-up issues open
+- **Add milestones and labels** to every GitHub issue before starting work
+
+### Issue Tracking
+- GitHub Issues = tickets; always create one before starting work
+- Required metadata per issue: milestone (v1.0.0, v1.1.0, etc.) + labels (bug, feature, docs, infra, etc.)
+
+---
+
+## Commands
+
+### Setup
+```bash
+python -m venv venv
+venv\Scripts\activate                 # Windows
+source venv/bin/activate              # macOS/Linux
+
+pip install -r requirements.txt
+cp .env.example .env
+python manage.py migrate
+python manage.py runserver
+```
+
+### Development
+```bash
+# Run development server
+python manage.py runserver
+
+# Access API
+http://localhost:8000/api/docs/       # Swagger UI (interactive)
+http://localhost:8000/api/schema/     # OpenAPI JSON
+
+# Interactive shell
+python manage.py shell
+```
+
+### Testing
+```bash
+# All tests with coverage (must pass 70% threshold)
+pytest trips/tests/ -v --cov=trips --cov-report=html
+
+# Run coverage report
+start htmlcov/index.html               # Windows
+open htmlcov/index.html                # macOS/Linux
+
+# Specific test suites
+pytest trips/tests/test_integration.py -v -m integration    # Integration tests
+pytest trips/tests/ -v -m unit                              # Unit tests only
+
+# Single test
+pytest trips/tests/test_hos_engine.py::test_fuel_stop_insertion -v
+
+# Watch mode (requires pytest-watch: pip install pytest-watch)
+ptw trips/tests/
+```
+
+### Code Quality
+```bash
+# Format code
+black .
+isort .
+
+# Lint
+flake8 . --exclude migrations/ --max-line-length=120
+
+# Django system checks
+python manage.py check
+```
+
+### Database
+```bash
+# Create migration
+python manage.py makemigrations
+
+# Apply migrations
+python manage.py migrate
+
+# Reset database (dev only)
+python manage.py migrate zero trips    # Revert trips migrations
+python manage.py migrate               # Reapply
+```
+
+---
+
+## Architecture
+
+### Request Flow: POST /api/plan-route/
+
+```
+1. TripInputSerializer validates request
+   ├─ Checks: location strings non-empty, cycle_hours_used in [0, 70]
+   └─ Rejects invalid data (returns 400)
+
+2. Geocoding (Nominatim API)
+   ├─ geocode(current_location) → [lat, lon]
+   ├─ geocode(pickup_location) → [lat, lon]
+   └─ geocode(dropoff_location) → [lat, lon]
+
+3. Routing (OSRM API)
+   ├─ get_route([current], [pickup], [dropoff])
+   ├─ Returns: 2 legs with distance_miles, duration_hours per leg
+   └─ Validates route feasibility
+
+4. HOS Simulation (hos_engine.simulate_trip)
+   ├─ Enforces FMCSA rules (11-hour drive, 14-hour window, 70-hour cycle)
+   ├─ Inserts fuel stops every 1,000 miles (30 min stops)
+   ├─ Inserts mandatory breaks (30 min after 8 drive hours)
+   ├─ Returns logbook_days (day-by-day breakdown of driving status)
+   └─ Validates trip feasibility under HOS constraints
+
+5. TripOutputSerializer builds response
+   ├─ route_coordinates: [lon, lat] pairs for map polyline
+   ├─ markers: start, pickup, dropoff, fuel stops, breaks
+   ├─ logbook_days: array of DayLog objects with events
+   └─ trip_summary: total_miles, drive_hours, fuel_stops, etc.
+
+6. Return 200 with full trip data
+```
+
+### Directory Structure
+
+```
+spotter-eld-logging-api/
+├── spotter/                         # Django project config
+│   ├── settings.py                  # Django settings (CORS, installed apps, DB)
+│   ├── urls.py                      # Root URL routing
+│   └── wsgi.py                      # WSGI entry point for production
+│
+├── trips/                           # Main app
+│   ├── views.py                     # PlanRouteView (HTTP endpoint)
+│   ├── serializers.py               # TripInputSerializer, TripOutputSerializer
+│   ├── routing.py                   # geocode(), get_route() (external APIs)
+│   ├── hos_engine.py                # simulate_trip() (FMCSA HOS logic)
+│   │
+│   ├── tests/
+│   │   ├── conftest.py              # Shared pytest fixtures
+│   │   ├── test_integration.py      # End-to-end flow tests
+│   │   ├── test_api_endpoint.py     # HTTP request/response tests
+│   │   ├── test_routing.py          # Geocoding + OSRM tests
+│   │   └── test_hos_engine.py       # HOS rule validation tests
+│   │
+│   ├── migrations/                  # Database schema (auto-generated by manage.py makemigrations)
+│   ├── models.py                    # (Future) Trip model for persistence
+│   └── urls.py                      # Trip app routes
+│
+├── manage.py                        # Django CLI
+├── pytest.ini                       # Pytest config (70% coverage required)
+├── requirements.txt                 # Python dependencies
+├── .env.example                     # Environment variables template
+│
+└── docs/                            # Detailed documentation
+    ├── ARCHITECTURE.md              # Deep dive (request flow, layered components)
+    ├── API_CONTRACT.md              # Request/response schemas
+    ├── HOS_ENGINE.md                # FMCSA rules reference
+    ├── TESTING.md                   # Test patterns and coverage
+    ├── openapi.yaml                 # Machine-readable API spec
+    └── OPENAPI_VALIDATION.md        # CI/CD validation process
+```
+
+### Core Modules
+
+**trips.views.PlanRouteView**
+- Single POST endpoint: `/api/plan-route/`
+- Orchestrates: serialize → geocode → route → HOS simulate → respond
+
+**trips.serializers**
+- `TripInputSerializer` — validates user input (locations, cycle_hours_used)
+- `TripOutputSerializer` — structures API response (markers, logbook_days, trip_summary)
+
+**trips.routing**
+- `geocode(location_string)` — calls Nominatim, returns [lat, lon]
+- `get_route(start, pickup, dropoff)` — calls OSRM, returns legs with distance/duration
+
+**trips.hos_engine**
+- `simulate_trip(total_distance_miles, leg1_hours, leg2_hours, current_cycle_used_hours, leg1_miles, leg2_miles)`
+- Returns dict with logbook_days (array of DayLog objects) + trip_summary (totals)
+- Enforces FMCSA rules:
+  - **11-hour drive limit** per shift
+  - **14-hour on-duty window** per shift
+  - **30-minute break** after 8 cumulative drive hours
+  - **10-hour rest** between shifts to reset counters
+  - **70-hour / 8-day rolling cycle** limit
+  - **Fuel stops** (30 min) every 1,000 miles
+  - **1-hour on-duty** at pickup + dropoff locations
+
+---
+
+## Testing
+
+### Coverage Requirements
+- **Minimum 70%** (enforced by pytest.ini config `--cov-fail-under=70`)
+- Target 87%+ (current state)
+
+### Test Structure
+- **Unit tests** — isolated functions with mocks (fast, no API calls)
+- **Integration tests** — marked `@pytest.mark.integration`, test multiple modules, mock external APIs
+- **API endpoint tests** — HTTP request/response validation
+
+### Common Test Patterns
+
+```python
+# Fixture: Mock external API in conftest.py
+@pytest.fixture
+def mock_nominatim_geocode(monkeypatch):
+    def fake_geocode(location):
+        return [40.7128, -74.0060]  # NYC
+    monkeypatch.setattr("trips.routing.geocode", fake_geocode)
+
+# Unit test: Test serializer validation
+def test_serializer_rejects_negative_cycle_hours():
+    data = {"current_location": "NYC", ..., "cycle_hours_used": -5}
+    s = TripInputSerializer(data=data)
+    assert not s.is_valid()
+    assert "cycle_hours_used" in s.errors
+
+# Integration test: Full trip simulation
+@pytest.mark.integration
+def test_successful_route_planning_end_to_end(mock_nominatim_geocode, mock_osrm_get_route):
+    data = {"current_location": "Chicago", ..., "cycle_hours_used": 30}
+    response = client.post("/api/plan-route/", data)
+    assert response.status_code == 200
+    assert "logbook_days" in response.json()
+```
+
+---
+
+## CI/CD
+
+### Workflows (`.github/workflows/`)
+- **tests.yml** — Runs on push/PR to main/develop; PostgreSQL service + pytest + coverage validation
+- **openapi-validation.yml** — Validates OpenAPI spec matches code
+- **release.yml** — Deployment pipeline (on tag)
+
+### Requirements for PR Merge
+1. All tests pass (70%+ coverage)
+2. OpenAPI spec is valid
+3. Code passes linting (enforced locally)
+4. Commit messages follow Conventional Commits
+
+---
+
+## Environment
+
+### `.env.example` Variables
+```bash
+DEBUG=True                                      # Dev: True, Prod: False
+DJANGO_SECRET_KEY=your-secret-key              # Change in production
+DATABASE_URL=postgresql://user:pass@host/db    # PostgreSQL connection
+CORS_ALLOWED_ORIGINS=http://localhost:3000     # Frontend URL
+```
+
+### External APIs
+- **Nominatim** (OpenStreetMap) — Geocoding; rate limit ~1 req/sec
+- **OSRM** (Open Source Routing Machine) — Route calculation
+- **PostgreSQL** — Deployed on Railway in production
+
+---
+
+## Dependencies
+
+### Key Packages
+- **django 4.2** + **djangorestframework 3.15** — REST API framework
+- **drf-spectacular 0.27** — OpenAPI schema generation + Swagger UI
+- **django-cors-headers** — CORS header handling
+- **requests** — HTTP client for external APIs
+- **python-dotenv** — Environment variable loading
+- **pytest**, **pytest-django**, **pytest-cov** — Testing + coverage
+
+### Adding Dependencies
+1. Edit `requirements.txt`
+2. `pip install -r requirements.txt`
+3. Test locally
+4. Commit: `requirements.txt` change with message `chore(deps): add <package>`
+
+---
+
+## Documentation References
+
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** — System design, detailed request flow, component interactions
+- **[API_CONTRACT.md](docs/API_CONTRACT.md)** — Request/response schemas, validation rules
+- **[HOS_ENGINE.md](docs/HOS_ENGINE.md)** — FMCSA rules deep dive, simulation algorithm
+- **[TESTING.md](docs/TESTING.md)** — Test patterns, running tests, coverage reporting
+- **[README.md](README.md)** — Quick start, overview, links to docs
