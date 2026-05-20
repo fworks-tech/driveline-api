@@ -1,0 +1,32 @@
+#!/bin/bash
+# Pre-commit hook: format and lint code before commit
+# Install: cp docs/hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+echo "Running pre-commit checks..."
+
+# Format with black
+python -m black trips/ --quiet
+if [ $? -ne 0 ]; then
+    echo "❌ Black formatting failed"
+    exit 1
+fi
+
+# Sort imports with isort
+python -m isort trips/ --quiet
+if [ $? -ne 0 ]; then
+    echo "❌ isort import sorting failed"
+    exit 1
+fi
+
+# Lint with flake8
+python -m flake8 trips/ --exclude migrations/ --max-line-length=120 -j 1
+if [ $? -ne 0 ]; then
+    echo "❌ flake8 linting failed"
+    exit 1
+fi
+
+# Stage formatted files
+git add trips/
+
+echo "✅ Pre-commit checks passed"
+exit 0

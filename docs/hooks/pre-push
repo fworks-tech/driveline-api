@@ -1,0 +1,16 @@
+#!/bin/bash
+# Pre-push hook: run tests before pushing
+# Install: cp docs/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+
+echo "Running tests before push..."
+
+# Run tests with coverage
+python -m pytest trips/tests/test_api_endpoint.py trips/tests/test_hos_engine.py -v --tb=short
+
+if [ $? -ne 0 ]; then
+    echo "❌ Tests failed - push aborted"
+    exit 1
+fi
+
+echo "✅ All tests passed - proceeding with push"
+exit 0
