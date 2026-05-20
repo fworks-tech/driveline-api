@@ -14,7 +14,7 @@ class TestPlanRouteAPI(TestCase):
 
     @patch("trips.routing.geocode")
     @patch("trips.routing.get_route")
-    @patch("trips.hos_engine.HOSEngine.simulate_trip")
+    @patch("trips.hos_engine.simulate_trip")
     def test_successful_route_planning(self, mock_hos, mock_route, mock_geocode):
         """Test successful route planning request."""
         # Mock geocoding results
@@ -24,35 +24,55 @@ class TestPlanRouteAPI(TestCase):
             (32.7767, -96.797),  # Dallas
         ]
 
-        # Mock routing results
-        mock_route.side_effect = [
-            {
-                "coordinates": [
-                    [41.8781, -87.6298],
-                    [40.0, -87.0],
-                    [39.7684, -86.1581],
-                ],
-                "distance_miles": 297.3,
-                "duration_hours": 4.5,
-            },
-            {
-                "coordinates": [[39.7684, -86.1581], [35.0, -90.0], [32.7767, -96.797]],
-                "distance_miles": 552.7,
-                "duration_hours": 8.0,
-            },
-        ]
+        # Mock routing results (single call with 2 legs: current->pickup->dropoff)
+        mock_route.return_value = {
+            "coordinates": [
+                [-87.6298, 41.8781],
+                [-87.0, 40.0],
+                [-86.1581, 39.7684],
+                [-90.0, 35.0],
+                [-96.797, 32.7767],
+            ],
+            "legs": [
+                {
+                    "distance_miles": 297.3,
+                    "duration_hours": 4.5,
+                },
+                {
+                    "distance_miles": 552.7,
+                    "duration_hours": 8.0,
+                },
+            ],
+        }
 
         # Mock HOS engine
         mock_hos.return_value = {
             "logbook_days": [
                 {
-                    "day": 1,
+                    "day": 0,
+                    "date_offset": 0,
                     "events": [
-                        {"status": "DRIVING", "duration": 11.0},
-                        {"status": "OFF_DUTY", "duration": 13.0},
+                        {
+                            "status": "DRIVING",
+                            "start_hour": 0.0,
+                            "end_hour": 11.0,
+                            "duration_hours": 11.0,
+                            "label": "Driving",
+                        },
+                        {
+                            "status": "OFF_DUTY",
+                            "start_hour": 11.0,
+                            "end_hour": 24.0,
+                            "duration_hours": 13.0,
+                            "label": "Off Duty",
+                        },
                     ],
+                    "total_driving_hours": 11.0,
+                    "total_on_duty_hours": 11.0,
                 }
             ],
+            "total_trip_hours": 12.5,
+            "total_driving_hours": 11.0,
             "num_fuel_stops": 0,
             "num_rest_stops": 1,
         }

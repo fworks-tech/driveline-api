@@ -102,6 +102,7 @@ def simulate_trip(
         """Hours of driving before mandatory 30-min break."""
         return max(0.0, BREAK_DRIVE_THRESHOLD - state["drive_since_break"])
 
+
     def remaining_cycle() -> float:
         """Hours left in 70-hr cycle."""
         return max(0.0, MAX_CYCLE_HOURS - state["cycle_hours"])
