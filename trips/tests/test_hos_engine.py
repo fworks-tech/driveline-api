@@ -5,7 +5,9 @@ from trips.hos_engine import simulate_trip
 VALID_STATUSES = {"OFF_DUTY", "SLEEPER_BERTH", "DRIVING", "ON_DUTY_ND"}
 
 
-def make_trip(total_miles, leg1_miles=None, leg1_hours=None, leg2_hours=None, cycle_hours=0):
+def make_trip(
+    total_miles, leg1_miles=None, leg1_hours=None, leg2_hours=None, cycle_hours=0
+):
     """Helper: build a simulate_trip call with sensible defaults."""
     if leg1_miles is None:
         leg1_miles = total_miles * 0.4
@@ -121,7 +123,9 @@ class TestHOSEngineRules:
 
     def test_chicago_to_dallas_scenario(self):
         """Integration: Chicago → Dallas (~850 miles) produces a valid logbook."""
-        result = make_trip(850, leg1_miles=297, leg1_hours=4.5, leg2_hours=8.0, cycle_hours=30)
+        result = make_trip(
+            850, leg1_miles=297, leg1_hours=4.5, leg2_hours=8.0, cycle_hours=30
+        )
         assert result["total_driving_hours"] > 0
         assert len(result["logbook_days"]) >= 1
         for day in result["logbook_days"]:
