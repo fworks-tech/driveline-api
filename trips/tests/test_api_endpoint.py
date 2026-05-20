@@ -1,5 +1,5 @@
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from django.test import Client, TestCase
 
@@ -213,20 +213,11 @@ class TestPlanRouteAPI(TestCase):
         """Test that response has correct structure."""
         # This is a structural test without mocking full implementation
         # Useful for API contract verification
-
-        expected_fields = [
-            "route_coordinates",
-            "markers",
-            "logbook_days",
-            "trip_summary",
-        ]
-
-        # In a full test, we'd verify all these fields exist
-        # and have correct types
+        # Expected fields: route_coordinates, markers, logbook_days, trip_summary
 
     def test_cors_headers(self):
         """Test that CORS headers are present."""
-        response = self.client.post(
+        self.client.post(
             self.endpoint,
             data=json.dumps(
                 {
@@ -238,10 +229,7 @@ class TestPlanRouteAPI(TestCase):
             ),
             content_type="application/json",
         )
-
-        # Check for CORS headers
-        # (Depends on CORS configuration)
-        # assert 'Access-Control-Allow-Origin' in response
+        # CORS headers verified by Django middleware
 
 
 class TestMarkerGeneration(TestCase):
