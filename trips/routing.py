@@ -15,7 +15,9 @@ def geocode(address: str) -> tuple[float, float]:
     resp.raise_for_status()
     data = resp.json()
     if not data:
-        raise ValueError(f"Could not geocode address: '{address}'. Please check the spelling.")
+        raise ValueError(
+            f"Could not geocode address: '{address}'. Please check the spelling."
+        )
     return float(data[0]["lat"]), float(data[0]["lon"])
 
 

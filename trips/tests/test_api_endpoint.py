@@ -1,6 +1,7 @@
-from django.test import TestCase, Client
-from unittest.mock import patch, MagicMock
 import json
+from unittest.mock import MagicMock, patch
+
+from django.test import Client, TestCase
 
 
 class TestPlanRouteAPI(TestCase):
@@ -9,86 +10,94 @@ class TestPlanRouteAPI(TestCase):
     def setUp(self):
         """Initialize test client."""
         self.client = Client()
-        self.endpoint = '/api/plan-route/'
+        self.endpoint = "/api/plan-route/"
 
-    @patch('trips.routing.geocode')
-    @patch('trips.routing.get_route')
-    @patch('trips.hos_engine.HOSEngine.simulate_trip')
+    @patch("trips.routing.geocode")
+    @patch("trips.routing.get_route")
+    @patch("trips.hos_engine.HOSEngine.simulate_trip")
     def test_successful_route_planning(self, mock_hos, mock_route, mock_geocode):
         """Test successful route planning request."""
         # Mock geocoding results
         mock_geocode.side_effect = [
             (41.8781, -87.6298),  # Chicago
             (39.7684, -86.1581),  # Indianapolis
-            (32.7767, -96.797),   # Dallas
+            (32.7767, -96.797),  # Dallas
         ]
 
         # Mock routing results
         mock_route.side_effect = [
             {
-                'coordinates': [[41.8781, -87.6298], [40.0, -87.0], [39.7684, -86.1581]],
-                'distance_miles': 297.3,
-                'duration_hours': 4.5,
+                "coordinates": [
+                    [41.8781, -87.6298],
+                    [40.0, -87.0],
+                    [39.7684, -86.1581],
+                ],
+                "distance_miles": 297.3,
+                "duration_hours": 4.5,
             },
             {
-                'coordinates': [[39.7684, -86.1581], [35.0, -90.0], [32.7767, -96.797]],
-                'distance_miles': 552.7,
-                'duration_hours': 8.0,
+                "coordinates": [[39.7684, -86.1581], [35.0, -90.0], [32.7767, -96.797]],
+                "distance_miles": 552.7,
+                "duration_hours": 8.0,
             },
         ]
 
         # Mock HOS engine
         mock_hos.return_value = {
-            'logbook_days': [
+            "logbook_days": [
                 {
-                    'day': 1,
-                    'events': [
-                        {'status': 'DRIVING', 'duration': 11.0},
-                        {'status': 'OFF_DUTY', 'duration': 13.0},
+                    "day": 1,
+                    "events": [
+                        {"status": "DRIVING", "duration": 11.0},
+                        {"status": "OFF_DUTY", "duration": 13.0},
                     ],
                 }
             ],
-            'num_fuel_stops': 0,
-            'num_rest_stops': 1,
+            "num_fuel_stops": 0,
+            "num_rest_stops": 1,
         }
 
         # Send request
         response = self.client.post(
             self.endpoint,
-            data=json.dumps({
-                'current_location': 'Chicago, IL',
-                'pickup_location': 'Indianapolis, IN',
-                'dropoff_location': 'Dallas, TX',
-                'cycle_hours_used': 30,
-            }),
-            content_type='application/json'
+            data=json.dumps(
+                {
+                    "current_location": "Chicago, IL",
+                    "pickup_location": "Indianapolis, IN",
+                    "dropoff_location": "Dallas, TX",
+                    "cycle_hours_used": 30,
+                }
+            ),
+            content_type="application/json",
         )
 
         # Verify response
         assert response.status_code == 200
         data = response.json()
-        assert 'route_coordinates' in data
-        assert 'markers' in data
-        assert 'logbook_days' in data
-        assert 'trip_summary' in data
+        assert "route_coordinates" in data
+        assert "markers" in data
+        assert "logbook_days" in data
+        assert "trip_summary" in data
 
         # Verify markers include all stops
-        assert len(data['markers']) >= 3  # Start, pickup, dropoff
+        assert len(data["markers"]) >= 3  # Start, pickup, dropoff
 
-    @patch('trips.routing.geocode')
+    @patch("trips.routing.geocode")
     def test_invalid_current_location(self, mock_geocode):
         """Test request with invalid current location."""
         mock_geocode.return_value = None  # Location not found
 
         response = self.client.post(
             self.endpoint,
-            data=json.dumps({
-                'current_location': 'InvalidCityXYZ',
-                'pickup_location': 'Indianapolis, IN',
-                'dropoff_location': 'Dallas, TX',
-                'cycle_hours_used': 30,
-            }),
-            content_type='application/json'
+            data=json.dumps(
+                {
+                    "current_location": "InvalidCityXYZ",
+                    "pickup_location": "Indianapolis, IN",
+                    "dropoff_location": "Dallas, TX",
+                    "cycle_hours_used": 30,
+                }
+            ),
+            content_type="application/json",
         )
 
         assert response.status_code == 400
@@ -97,30 +106,34 @@ class TestPlanRouteAPI(TestCase):
         """Test request missing required field."""
         response = self.client.post(
             self.endpoint,
-            data=json.dumps({
-                'current_location': 'Chicago, IL',
-                'pickup_location': 'Indianapolis, IN',
-                # Missing 'dropoff_location'
-                'cycle_hours_used': 30,
-            }),
-            content_type='application/json'
+            data=json.dumps(
+                {
+                    "current_location": "Chicago, IL",
+                    "pickup_location": "Indianapolis, IN",
+                    # Missing 'dropoff_location'
+                    "cycle_hours_used": 30,
+                }
+            ),
+            content_type="application/json",
         )
 
         assert response.status_code == 400
         data = response.json()
-        assert 'dropoff_location' in str(data)
+        assert "dropoff_location" in str(data)
 
     def test_invalid_cycle_hours(self):
         """Test request with invalid cycle hours."""
         response = self.client.post(
             self.endpoint,
-            data=json.dumps({
-                'current_location': 'Chicago, IL',
-                'pickup_location': 'Indianapolis, IN',
-                'dropoff_location': 'Dallas, TX',
-                'cycle_hours_used': 100,  # Exceeds 70-hour limit
-            }),
-            content_type='application/json'
+            data=json.dumps(
+                {
+                    "current_location": "Chicago, IL",
+                    "pickup_location": "Indianapolis, IN",
+                    "dropoff_location": "Dallas, TX",
+                    "cycle_hours_used": 100,  # Exceeds 70-hour limit
+                }
+            ),
+            content_type="application/json",
         )
 
         assert response.status_code == 400
@@ -129,13 +142,15 @@ class TestPlanRouteAPI(TestCase):
         """Test request with negative cycle hours."""
         response = self.client.post(
             self.endpoint,
-            data=json.dumps({
-                'current_location': 'Chicago, IL',
-                'pickup_location': 'Indianapolis, IN',
-                'dropoff_location': 'Dallas, TX',
-                'cycle_hours_used': -5,
-            }),
-            content_type='application/json'
+            data=json.dumps(
+                {
+                    "current_location": "Chicago, IL",
+                    "pickup_location": "Indianapolis, IN",
+                    "dropoff_location": "Dallas, TX",
+                    "cycle_hours_used": -5,
+                }
+            ),
+            content_type="application/json",
         )
 
         assert response.status_code == 400
@@ -144,13 +159,15 @@ class TestPlanRouteAPI(TestCase):
         """Test request with empty location strings."""
         response = self.client.post(
             self.endpoint,
-            data=json.dumps({
-                'current_location': '',
-                'pickup_location': 'Indianapolis, IN',
-                'dropoff_location': 'Dallas, TX',
-                'cycle_hours_used': 30,
-            }),
-            content_type='application/json'
+            data=json.dumps(
+                {
+                    "current_location": "",
+                    "pickup_location": "Indianapolis, IN",
+                    "dropoff_location": "Dallas, TX",
+                    "cycle_hours_used": 30,
+                }
+            ),
+            content_type="application/json",
         )
 
         assert response.status_code == 400
@@ -159,13 +176,15 @@ class TestPlanRouteAPI(TestCase):
         """Test request with location string too short."""
         response = self.client.post(
             self.endpoint,
-            data=json.dumps({
-                'current_location': 'A',  # Too short
-                'pickup_location': 'Indianapolis, IN',
-                'dropoff_location': 'Dallas, TX',
-                'cycle_hours_used': 30,
-            }),
-            content_type='application/json'
+            data=json.dumps(
+                {
+                    "current_location": "A",  # Too short
+                    "pickup_location": "Indianapolis, IN",
+                    "dropoff_location": "Dallas, TX",
+                    "cycle_hours_used": 30,
+                }
+            ),
+            content_type="application/json",
         )
 
         assert response.status_code == 400
@@ -176,10 +195,10 @@ class TestPlanRouteAPI(TestCase):
         # Useful for API contract verification
 
         expected_fields = [
-            'route_coordinates',
-            'markers',
-            'logbook_days',
-            'trip_summary',
+            "route_coordinates",
+            "markers",
+            "logbook_days",
+            "trip_summary",
         ]
 
         # In a full test, we'd verify all these fields exist
@@ -189,13 +208,15 @@ class TestPlanRouteAPI(TestCase):
         """Test that CORS headers are present."""
         response = self.client.post(
             self.endpoint,
-            data=json.dumps({
-                'current_location': 'Chicago, IL',
-                'pickup_location': 'Indianapolis, IN',
-                'dropoff_location': 'Dallas, TX',
-                'cycle_hours_used': 30,
-            }),
-            content_type='application/json'
+            data=json.dumps(
+                {
+                    "current_location": "Chicago, IL",
+                    "pickup_location": "Indianapolis, IN",
+                    "dropoff_location": "Dallas, TX",
+                    "cycle_hours_used": 30,
+                }
+            ),
+            content_type="application/json",
         )
 
         # Check for CORS headers
@@ -210,8 +231,8 @@ class TestMarkerGeneration(TestCase):
         """Initialize test client."""
         self.client = Client()
 
-    @patch('trips.routing.geocode')
-    @patch('trips.routing.get_route')
+    @patch("trips.routing.geocode")
+    @patch("trips.routing.get_route")
     def test_marker_types(self, mock_route, mock_geocode):
         """Test that correct marker types are generated."""
         mock_geocode.side_effect = [
@@ -222,14 +243,14 @@ class TestMarkerGeneration(TestCase):
 
         mock_route.side_effect = [
             {
-                'coordinates': [[41.8781, -87.6298], [39.7684, -86.1581]],
-                'distance_miles': 300,
-                'duration_hours': 4.5,
+                "coordinates": [[41.8781, -87.6298], [39.7684, -86.1581]],
+                "distance_miles": 300,
+                "duration_hours": 4.5,
             },
             {
-                'coordinates': [[39.7684, -86.1581], [32.7767, -96.797]],
-                'distance_miles': 550,
-                'duration_hours': 8.0,
+                "coordinates": [[39.7684, -86.1581], [32.7767, -96.797]],
+                "distance_miles": 550,
+                "duration_hours": 8.0,
             },
         ]
 

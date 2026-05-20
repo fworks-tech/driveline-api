@@ -1,5 +1,6 @@
 import unittest
-from trips.hos_engine import HOSEngine, DutyStatus
+
+from trips.hos_engine import DutyStatus, HOSEngine
 
 
 class TestHOSEngine(unittest.TestCase):
@@ -18,8 +19,9 @@ class TestHOSEngine(unittest.TestCase):
 
         # The on-duty period should be enforced
         total_on_duty = sum(
-            e['duration'] for e in self.engine.events
-            if e['status'] == DutyStatus.ON_DUTY_ND
+            e["duration"]
+            for e in self.engine.events
+            if e["status"] == DutyStatus.ON_DUTY_ND
         )
         assert total_on_duty >= 1.0
 
@@ -41,15 +43,16 @@ class TestHOSEngine(unittest.TestCase):
 
         # Should trigger mandatory rest
         driving_hours = sum(
-            e['duration'] for e in self.engine.events
-            if e['status'] == DutyStatus.DRIVING
+            e["duration"]
+            for e in self.engine.events
+            if e["status"] == DutyStatus.DRIVING
         )
 
         # No continuous driving period should exceed 11 hours
         consecutive_drive = 0
         for event in self.engine.events:
-            if event['status'] == DutyStatus.DRIVING:
-                consecutive_drive += event['duration']
+            if event["status"] == DutyStatus.DRIVING:
+                consecutive_drive += event["duration"]
             else:
                 consecutive_drive = 0
 
@@ -63,8 +66,9 @@ class TestHOSEngine(unittest.TestCase):
 
         # Total on-duty time should not exceed 14 hours without reset
         on_duty_hours = sum(
-            e['duration'] for e in self.engine.events
-            if e['status'] in [DutyStatus.DRIVING, DutyStatus.ON_DUTY_ND]
+            e["duration"]
+            for e in self.engine.events
+            if e["status"] in [DutyStatus.DRIVING, DutyStatus.ON_DUTY_ND]
         )
 
         # In a real implementation, this would trigger a 10-hour rest
@@ -77,8 +81,7 @@ class TestHOSEngine(unittest.TestCase):
 
         # Should have a break event
         break_events = [
-            e for e in self.engine.events
-            if e['status'] == DutyStatus.OFF_DUTY
+            e for e in self.engine.events if e["status"] == DutyStatus.OFF_DUTY
         ]
 
         assert len(break_events) > 0
@@ -92,8 +95,9 @@ class TestHOSEngine(unittest.TestCase):
 
         # Calculate total driving hours
         total_drive = sum(
-            e['duration'] for e in self.engine.events
-            if e['status'] == DutyStatus.DRIVING
+            e["duration"]
+            for e in self.engine.events
+            if e["status"] == DutyStatus.DRIVING
         )
 
         # Should not exceed 70 hours in rolling 8-day window
@@ -105,16 +109,17 @@ class TestHOSEngine(unittest.TestCase):
         result = self.engine.simulate_trip(850.0, cycle_hours_used=30)
 
         assert result is not None
-        assert result['total_distance'] == 850.0
-        assert result['num_days'] >= 1
-        assert len(result['logbook_days']) > 0
+        assert result["total_distance"] == 850.0
+        assert result["num_days"] >= 1
+        assert len(result["logbook_days"]) > 0
 
         # Validate each day's events
-        for day in result['logbook_days']:
+        for day in result["logbook_days"]:
             # Check driving doesn't exceed 11 hours per day
             day_drive = sum(
-                e['duration'] for e in day['events']
-                if e['status'] == DutyStatus.DRIVING
+                e["duration"]
+                for e in day["events"]
+                if e["status"] == DutyStatus.DRIVING
             )
             assert day_drive <= 11.0
 
@@ -124,7 +129,7 @@ class TestHOSEngine(unittest.TestCase):
         result = self.engine.simulate_trip(1000.0, cycle_hours_used=0)
 
         assert result is not None
-        assert len(result['logbook_days']) >= 2  # Should span 2+ days
+        assert len(result["logbook_days"]) >= 2  # Should span 2+ days
 
     def test_new_york_to_miami_scenario(self):
         """Integration test: NY to Miami trip (1,200 miles)."""
@@ -132,9 +137,9 @@ class TestHOSEngine(unittest.TestCase):
         result = self.engine.simulate_trip(1200.0, cycle_hours_used=50)
 
         assert result is not None
-        assert result['total_distance'] == 1200.0
+        assert result["total_distance"] == 1200.0
         # Should span at least 2 days due to HOS limits
-        assert len(result['logbook_days']) >= 2
+        assert len(result["logbook_days"]) >= 2
 
     def test_high_cycle_hours_used(self):
         """Test behavior when driver has high cycle hours already used."""
@@ -144,8 +149,9 @@ class TestHOSEngine(unittest.TestCase):
         assert result is not None
         # Trip should be shorter or split due to cycle limit
         total_drive = sum(
-            e['duration'] for e in result['logbook_days'][0]['events']
-            if e['status'] == DutyStatus.DRIVING
+            e["duration"]
+            for e in result["logbook_days"][0]["events"]
+            if e["status"] == DutyStatus.DRIVING
         )
         # Remaining available: 70 - 65 = 5 hours
         assert total_drive <= 5.0
@@ -156,15 +162,15 @@ class TestHOSEngine(unittest.TestCase):
 
         prev_time = 0
         for event in self.engine.events:
-            assert event['start_time'] >= prev_time
-            prev_time = event['start_time'] + event['duration']
+            assert event["start_time"] >= prev_time
+            prev_time = event["start_time"] + event["duration"]
 
     def test_no_gaps_in_logbook(self):
         """Test that logbook has no gaps (24 hours per day)."""
         result = self.engine.simulate_trip(850.0)
 
-        for day in result['logbook_days']:
+        for day in result["logbook_days"]:
             # Sum all event durations
-            total_hours = sum(e['duration'] for e in day['events'])
+            total_hours = sum(e["duration"] for e in day["events"])
             # Should cover entire 24-hour period
             assert total_hours <= 24.0

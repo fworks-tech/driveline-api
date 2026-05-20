@@ -1,11 +1,11 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
 from drf_spectacular.utils import extend_schema
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from .serializers import TripInputSerializer, TripOutputSerializer
-from .routing import geocode, get_route
 from .hos_engine import simulate_trip
+from .routing import geocode, get_route
+from .serializers import TripInputSerializer, TripOutputSerializer
 
 
 class PlanRouteView(APIView):
@@ -88,16 +88,22 @@ class PlanRouteView(APIView):
             for day_idx, day in enumerate(logbook["logbook_days"]):
                 events_transformed = []
                 for ev in day["events"]:
-                    events_transformed.append({
-                        "status": ev["status"],
-                        "start_minute": int(ev["start_hour"] * 60),
-                        "duration_minutes": int((ev["end_hour"] - ev["start_hour"]) * 60),
-                        "label": ev["label"],
-                    })
-                logbook_days_transformed.append({
-                    "day": day_idx + 1,
-                    "events": events_transformed,
-                })
+                    events_transformed.append(
+                        {
+                            "status": ev["status"],
+                            "start_minute": int(ev["start_hour"] * 60),
+                            "duration_minutes": int(
+                                (ev["end_hour"] - ev["start_hour"]) * 60
+                            ),
+                            "label": ev["label"],
+                        }
+                    )
+                logbook_days_transformed.append(
+                    {
+                        "day": day_idx + 1,
+                        "events": events_transformed,
+                    }
+                )
 
             return Response(
                 {
