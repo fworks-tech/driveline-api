@@ -82,6 +82,42 @@ python manage.py runserver
 
 API will be available at `http://localhost:8000`
 
+**Access Swagger UI documentation:**
+```
+http://localhost:8000/api/docs/
+```
+
+The Swagger UI provides interactive API documentation where you can:
+- View all request/response schemas
+- See example requests and responses
+- Test endpoints directly in the browser
+- Understand validation rules
+
+---
+
+## 🔗 Frontend Integration
+
+The backend is designed to integrate with the [`spotter-eld-logging-app`](https://github.com/fworks-tech/spotter-eld-logging-app) React frontend (Vite 6).
+
+**Local development with both backend + frontend:**
+
+```bash
+# Terminal 1: Start backend on port 8000
+python manage.py runserver
+
+# Terminal 2: Start frontend on port 3000 (with automatic proxy to backend)
+cd ../spotter-eld-logging-app/frontend
+npm install
+echo "VITE_API_URL=http://localhost:8000" > .env.local
+npm run dev
+```
+
+Open `http://localhost:3000` — frontend automatically proxies `/api/*` requests to backend.
+
+**For complete setup guide, see [LOCAL_DEVELOPMENT.md](docs/LOCAL_DEVELOPMENT.md)**
+
+---
+
 ## API Endpoints
 
 ### POST /api/plan-route/
@@ -253,11 +289,21 @@ kill -9 <PID>
 
 ## Documentation
 
-- [API Contract](docs/API_CONTRACT.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [HOS Engine Details](docs/HOS_ENGINE.md)
+### Backend Development
+- [Local Development Setup](docs/LOCAL_DEVELOPMENT.md) — Step-by-step guide for running backend + frontend locally
+- [Frontend Integration Guide](docs/FRONTEND_INTEGRATION.md) — How frontend connects to API, request/response contract, coordinate system reference
+- [API Contract](docs/API_CONTRACT.md) — Authoritative request/response schemas and validation rules
+- [Architecture](docs/ARCHITECTURE.md) — System design, request flow, layered components
+- [HOS Engine Technical Reference](docs/HOS_ENGINE.md) — Deep dive into FMCSA Hours of Service simulation engine
+- [OpenAPI Validation](docs/OPENAPI_VALIDATION.md) — How spec validation works in CI/CD
+
+### External Documentation
 - [Deployment Strategy](../DEVOPS_STRATEGY.md)
 - [Onboarding Guide](../ONBOARDING.md)
+
+### Interactive Documentation
+- **Swagger UI** — http://localhost:8000/api/docs/ (local development)
+- **OpenAPI Spec** — [docs/openapi.yaml](docs/openapi.yaml) (machine-readable)
 
 ## License
 
