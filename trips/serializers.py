@@ -37,7 +37,9 @@ class TripSummarySerializer(serializers.Serializer):
 
 
 class TripOutputSerializer(serializers.Serializer):
-    route_coordinates = serializers.ListField(child=serializers.ListField(child=serializers.FloatField()))
+    route_coordinates = serializers.ListField(
+        child=serializers.ListField(child=serializers.FloatField())
+    )
     markers = MarkerSerializer(many=True)
     logbook_days = LogbookDaySerializer(many=True)
     trip_summary = TripSummarySerializer()

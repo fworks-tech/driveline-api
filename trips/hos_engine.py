@@ -15,14 +15,14 @@ Rules enforced:
 from __future__ import annotations
 
 FUEL_INTERVAL_MILES = 1000.0
-FUEL_STOP_HOURS = 0.5          # 30 minutes
+FUEL_STOP_HOURS = 0.5  # 30 minutes
 PICKUP_HOURS = 1.0
 DROPOFF_HOURS = 1.0
 MAX_DRIVE_PER_SHIFT = 11.0
-MAX_WINDOW_PER_SHIFT = 14.0    # on-duty window
-BREAK_DRIVE_THRESHOLD = 8.0    # drive hours before mandatory 30-min break
-BREAK_DURATION = 0.5           # 30 minutes
-REST_DURATION = 10.0           # 10-hour reset
+MAX_WINDOW_PER_SHIFT = 14.0  # on-duty window
+BREAK_DRIVE_THRESHOLD = 8.0  # drive hours before mandatory 30-min break
+BREAK_DURATION = 0.5  # 30 minutes
+REST_DURATION = 10.0  # 10-hour reset
 MAX_CYCLE_HOURS = 70.0
 
 
@@ -46,10 +46,10 @@ def simulate_trip(
     # --- Mutable state (use a dict so nested helpers can mutate) ---
     state = {
         "cycle_hours": current_cycle_used_hours,  # rolling 70-hr cycle
-        "shift_drive": 0.0,       # driving hours this shift (max 11)
-        "shift_on_duty": 0.0,     # on-duty hours this shift (max 14 window)
-        "shift_start": None,      # absolute hour when this shift started
-        "drive_since_break": 0.0, # driving since last 30-min break (max 8)
+        "shift_drive": 0.0,  # driving hours this shift (max 11)
+        "shift_on_duty": 0.0,  # on-duty hours this shift (max 14 window)
+        "shift_start": None,  # absolute hour when this shift started
+        "drive_since_break": 0.0,  # driving since last 30-min break (max 8)
         "miles_since_fuel": 0.0,
         "num_fuel_stops": 0,
         "num_rest_stops": 0,
@@ -157,7 +157,9 @@ def simulate_trip(
             cap_cycle = remaining_cycle()
             # Miles-to-fuel in hours at current speed
             miles_to_fuel = max(0.0, FUEL_INTERVAL_MILES - state["miles_since_fuel"])
-            cap_fuel_hours = miles_to_fuel / avg_speed if avg_speed > 0 else float("inf")
+            cap_fuel_hours = (
+                miles_to_fuel / avg_speed if avg_speed > 0 else float("inf")
+            )
 
             # Smallest binding cap
             chunk_hours = min(
@@ -185,7 +187,11 @@ def simulate_trip(
                     do_fuel()
                 continue
 
-            chunk_miles = (chunk_hours / remaining_hours) * remaining_miles if remaining_hours > 0 else 0.0
+            chunk_miles = (
+                (chunk_hours / remaining_hours) * remaining_miles
+                if remaining_hours > 0
+                else 0.0
+            )
 
             # --- Drive the chunk ---
             start_shift_if_needed()
@@ -201,21 +207,24 @@ def simulate_trip(
 
             # --- Post-chunk checks ---
             # Fuel stop if we've hit 1,000 miles and still have more driving
-            if state["miles_since_fuel"] >= FUEL_INTERVAL_MILES - 0.001 and remaining_hours > 0.001:
+            if (
+                state["miles_since_fuel"] >= FUEL_INTERVAL_MILES - 0.001
+                and remaining_hours > 0.001
+            ):
                 do_fuel()
 
             # Mandatory break if 8 hrs driving reached and still more to drive
-            if state["drive_since_break"] >= BREAK_DRIVE_THRESHOLD - 0.001 and remaining_hours > 0.001:
+            if (
+                state["drive_since_break"] >= BREAK_DRIVE_THRESHOLD - 0.001
+                and remaining_hours > 0.001
+            ):
                 do_break()
 
     def do_on_duty_nd(duration: float, label: str, location: str = "") -> None:
         """On-Duty Not Driving activity (pickup, dropoff, fuel)."""
         start_shift_if_needed()
         # Check if rest needed first
-        if (
-            remaining_window() < duration
-            or remaining_cycle() < duration
-        ):
+        if remaining_window() < duration or remaining_cycle() < duration:
             do_rest()
             start_shift_if_needed()
         add_event("ON_DUTY_ND", duration, label, location)
