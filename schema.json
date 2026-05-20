@@ -1,0 +1,403 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Spotter AI ELD & Route Planner API",
+        "version": "1.0.0",
+        "description": "Production REST API for trip planning with FMCSA HOS compliance."
+    },
+    "paths": {
+        "/api/plan-route/": {
+            "post": {
+                "operationId": "plan_route_create",
+                "description": "POST /api/plan-route/\n\nAccepts trip details, geocodes locations, fetches route from OSRM,\nruns HOS simulation, and returns full trip data.",
+                "tags": [
+                    "plan-route"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TripInput"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    },
+                    {
+                        "basicAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TripOutput"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/schema/": {
+            "get": {
+                "operationId": "schema_retrieve",
+                "description": "OpenApi3 schema for this API. Format can be selected via content negotiation.\n\n- YAML: application/vnd.oai.openapi\n- JSON: application/vnd.oai.openapi+json",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "format",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "json",
+                                "yaml"
+                            ]
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "lang",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "af",
+                                "ar",
+                                "ar-dz",
+                                "ast",
+                                "az",
+                                "be",
+                                "bg",
+                                "bn",
+                                "br",
+                                "bs",
+                                "ca",
+                                "ckb",
+                                "cs",
+                                "cy",
+                                "da",
+                                "de",
+                                "dsb",
+                                "el",
+                                "en",
+                                "en-au",
+                                "en-gb",
+                                "eo",
+                                "es",
+                                "es-ar",
+                                "es-co",
+                                "es-mx",
+                                "es-ni",
+                                "es-ve",
+                                "et",
+                                "eu",
+                                "fa",
+                                "fi",
+                                "fr",
+                                "fy",
+                                "ga",
+                                "gd",
+                                "gl",
+                                "he",
+                                "hi",
+                                "hr",
+                                "hsb",
+                                "hu",
+                                "hy",
+                                "ia",
+                                "id",
+                                "ig",
+                                "io",
+                                "is",
+                                "it",
+                                "ja",
+                                "ka",
+                                "kab",
+                                "kk",
+                                "km",
+                                "kn",
+                                "ko",
+                                "ky",
+                                "lb",
+                                "lt",
+                                "lv",
+                                "mk",
+                                "ml",
+                                "mn",
+                                "mr",
+                                "ms",
+                                "my",
+                                "nb",
+                                "ne",
+                                "nl",
+                                "nn",
+                                "os",
+                                "pa",
+                                "pl",
+                                "pt",
+                                "pt-br",
+                                "ro",
+                                "ru",
+                                "sk",
+                                "sl",
+                                "sq",
+                                "sr",
+                                "sr-latn",
+                                "sv",
+                                "sw",
+                                "ta",
+                                "te",
+                                "tg",
+                                "th",
+                                "tk",
+                                "tr",
+                                "tt",
+                                "udm",
+                                "uk",
+                                "ur",
+                                "uz",
+                                "vi",
+                                "zh-hans",
+                                "zh-hant"
+                            ]
+                        }
+                    }
+                ],
+                "tags": [
+                    "schema"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    },
+                    {
+                        "basicAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/vnd.oai.openapi": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                }
+                            },
+                            "application/yaml": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                }
+                            },
+                            "application/vnd.oai.openapi+json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "LogbookDay": {
+                "type": "object",
+                "properties": {
+                    "day": {
+                        "type": "integer"
+                    },
+                    "events": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LogbookEvent"
+                        }
+                    }
+                },
+                "required": [
+                    "day",
+                    "events"
+                ]
+            },
+            "LogbookEvent": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "maxLength": 50
+                    },
+                    "start_minute": {
+                        "type": "integer"
+                    },
+                    "duration_minutes": {
+                        "type": "integer"
+                    },
+                    "label": {
+                        "type": "string",
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "duration_minutes",
+                    "label",
+                    "start_minute",
+                    "status"
+                ]
+            },
+            "Marker": {
+                "type": "object",
+                "properties": {
+                    "lat": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "lon": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "type": {
+                        "type": "string",
+                        "maxLength": 50
+                    },
+                    "label": {
+                        "type": "string",
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "label",
+                    "lat",
+                    "lon",
+                    "type"
+                ]
+            },
+            "TripInput": {
+                "type": "object",
+                "properties": {
+                    "current_location": {
+                        "type": "string",
+                        "maxLength": 500
+                    },
+                    "pickup_location": {
+                        "type": "string",
+                        "maxLength": 500
+                    },
+                    "dropoff_location": {
+                        "type": "string",
+                        "maxLength": 500
+                    },
+                    "cycle_hours_used": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 70,
+                        "minimum": 0
+                    }
+                },
+                "required": [
+                    "current_location",
+                    "cycle_hours_used",
+                    "dropoff_location",
+                    "pickup_location"
+                ]
+            },
+            "TripOutput": {
+                "type": "object",
+                "properties": {
+                    "route_coordinates": {
+                        "type": "array",
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "number",
+                                "format": "double"
+                            }
+                        }
+                    },
+                    "markers": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Marker"
+                        }
+                    },
+                    "logbook_days": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LogbookDay"
+                        }
+                    },
+                    "trip_summary": {
+                        "$ref": "#/components/schemas/TripSummary"
+                    }
+                },
+                "required": [
+                    "logbook_days",
+                    "markers",
+                    "route_coordinates",
+                    "trip_summary"
+                ]
+            },
+            "TripSummary": {
+                "type": "object",
+                "properties": {
+                    "total_distance_miles": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "total_trip_hours": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "total_drive_hours": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "legs": {
+                        "type": "integer"
+                    },
+                    "rest_stops": {
+                        "type": "integer"
+                    },
+                    "fuel_stops": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "fuel_stops",
+                    "legs",
+                    "rest_stops",
+                    "total_distance_miles",
+                    "total_drive_hours",
+                    "total_trip_hours"
+                ]
+            }
+        },
+        "securitySchemes": {
+            "basicAuth": {
+                "type": "http",
+                "scheme": "basic"
+            },
+            "cookieAuth": {
+                "type": "apiKey",
+                "in": "cookie",
+                "name": "sessionid"
+            }
+        }
+    }
+}

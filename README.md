@@ -101,7 +101,7 @@ Plan a complete trip with route, fuel stops, and HOS compliance.
 **Response:**
 ```json
 {
-  "route_coordinates": [[lat, lon], ...],
+  "route_coordinates": [[lon, lat], ...],
   "markers": [
     {"type": "start", "lat": 41.88, "lon": -87.63, "label": "Start"},
     {"type": "pickup", "lat": 39.77, "lon": -86.16, "label": "Pickup"},
@@ -123,7 +123,7 @@ Plan a complete trip with route, fuel stops, and HOS compliance.
     "total_drive_hours": 11,
     "fuel_stops": 1,
     "rest_stops": 1,
-    "number_of_legs": 3
+    "legs": 2
   }
 }
 ```
@@ -254,6 +254,7 @@ kill -9 <PID>
 ## Documentation
 
 - [API Contract](docs/API_CONTRACT.md)
+- [Architecture](docs/ARCHITECTURE.md)
 - [HOS Engine Details](docs/HOS_ENGINE.md)
 - [Deployment Strategy](../DEVOPS_STRATEGY.md)
 - [Onboarding Guide](../ONBOARDING.md)

@@ -172,7 +172,7 @@ paths:
                       total_drive_hours: 11.0
                       fuel_stops: 1
                       rest_stops: 1
-                      legs: 3
+                      legs: 2
 
         "400":
           description: Validation error
@@ -224,7 +224,7 @@ components:
         current_location:
           type: string
           minLength: 2
-          maxLength: 255
+          maxLength: 500
           description: Current driver location (city, state or full address)
           examples:
             - "Chicago, IL"
@@ -233,7 +233,7 @@ components:
         pickup_location:
           type: string
           minLength: 2
-          maxLength: 255
+          maxLength: 500
           description: Pickup location (city, state or full address)
           examples:
             - "Indianapolis, IN"
@@ -241,17 +241,18 @@ components:
         dropoff_location:
           type: string
           minLength: 2
-          maxLength: 255
+          maxLength: 500
           description: Final destination/dropoff location
           examples:
             - "Dallas, TX"
             - "Denver, Colorado"
         cycle_hours_used:
-          type: integer
-          minimum: 0
-          maximum: 70
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 70.0
           description: |
-            Hours already used in the current 8-day rolling cycle (0-70).
+            Hours already used in the current 8-day rolling cycle (0.0-70.0).
             Used to enforce 70-hour / 8-day FMCSA rule.
           examples:
             - 0
@@ -274,10 +275,10 @@ components:
               type: number
             minItems: 2
             maxItems: 2
-            description: "[latitude, longitude]"
+            description: "[longitude, latitude] (GeoJSON order)"
           description: |
-            Route polyline as array of [lat, lon] coordinate pairs.
-            Includes: start → pickup → waypoints → dropoff
+            Route polyline as array of [lon, lat] coordinate pairs in GeoJSON order (OSRM native format).
+            Note: longitude comes first. Includes: start → pickup → waypoints → dropoff
 
         markers:
           type: array
@@ -359,12 +360,14 @@ components:
           enum:
             - OFF_DUTY
             - SLEEPER
+            - SLEEPER_BERTH
             - DRIVING
             - ON_DUTY_ND
           description: |
             FMCSA duty status:
             - OFF_DUTY: Not working (sleep, meals, personal time)
-            - SLEEPER: In sleeper berth
+            - SLEEPER: In sleeper berth (reserved for future split-berth provision)
+            - SLEEPER_BERTH: Mandatory 10-hour rest reset in sleeper berth
             - DRIVING: Actively driving vehicle
             - ON_DUTY_ND: On-duty but not driving (pickup, fuel, rest breaks)
         start_minute:

@@ -46,6 +46,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TripSummary structure with all required fields
 - LogbookEvent timing (start_minute, duration_minutes)
 - LogbookDay numbering (day, events)
+- cycle_hours_used corrected to FloatField (was documented as IntegerField)
+- route_coordinates coordinate order corrected to [lon, lat] GeoJSON order (was documented as [lat, lon])
+- trip_summary.legs field name corrected (was number_of_legs in README example); value is always 2
+- Added SLEEPER_BERTH to LogbookEvent.status enum; SLEEPER reserved for future split-berth
+- Location field max_length corrected to 500 (was documented as 255)
 
 ### Dependencies
 - Django: 4.2.x
