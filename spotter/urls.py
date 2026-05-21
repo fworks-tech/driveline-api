@@ -1,6 +1,5 @@
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-
 from trips.views import HealthCheckView
 
 urlpatterns = [
