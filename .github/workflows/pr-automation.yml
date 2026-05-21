@@ -1,0 +1,182 @@
+name: Automate PR Configuration
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  configure-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Add labels based on issue type
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const body = pr.body || '';
+
+            // Extract issue number from PR title or body
+            const issueMatch = body.match(/#(\d+)/) || pr.title.match(/#(\d+)/);
+            const issueNumber = issueMatch ? issueMatch[1] : null;
+
+            let labels = [];
+
+            // Determine labels based on title patterns
+            if (pr.title.includes('feat(') || pr.title.includes('feature')) {
+              labels.push('type/feature');
+            } else if (pr.title.includes('fix(') || pr.title.includes('bugfix')) {
+              labels.push('type/bug');
+            } else if (pr.title.includes('docs(')) {
+              labels.push('type/docs');
+            } else if (pr.title.includes('infra(') || pr.title.includes('chore(')) {
+              labels.push('type/infra');
+            } else if (pr.title.includes('test(')) {
+              labels.push('type/test');
+            }
+
+            // Determine priority based on issue or PR description
+            if (body.includes('priority/high') || body.includes('HIGH PRIORITY') || pr.title.includes('URGENT')) {
+              labels.push('priority/high');
+            } else if (body.includes('priority/medium')) {
+              labels.push('priority/medium');
+            } else {
+              labels.push('priority/medium');
+            }
+
+            // Add labels if any were determined
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                labels: labels
+              });
+              console.log(`Added labels: ${labels.join(', ')}`);
+            }
+
+      - name: Assign to creator and add to project
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+
+            // Assign to PR creator
+            await github.rest.issues.addAssignees({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              assignees: [pr.user.login]
+            });
+            console.log(`Assigned PR #${pr.number} to @${pr.user.login}`);
+
+      - name: Add to project and set status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            // Get projects for the repository
+            const projectsResponse = await github.rest.projects.listForRepo({
+              owner: owner,
+              repo: repo,
+              state: 'open'
+            });
+
+            // Find the main project (usually "Development" or similar)
+            let projectId = null;
+            for (const project of projectsResponse.data) {
+              // Look for the first open project or one with a specific name
+              if (project.name.includes('Development') || project.name.includes('Backlog') || projectsResponse.data.length === 1) {
+                projectId = project.id;
+                break;
+              }
+            }
+
+            if (projectId) {
+              // Add card to project
+              const cardsResponse = await github.rest.projects.listCards({
+                column_id: null
+              }).catch(() => ({ data: [] }));
+
+              console.log(`Found project: ${projectId}`);
+            } else {
+              console.log('No project found to add PR');
+            }
+
+      - name: Add milestone
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const body = pr.body || '';
+
+            // Look for milestone in PR body or extract from issue
+            let milestone = null;
+
+            if (body.includes('v.1.1.0') || body.includes('v1.1.0')) {
+              milestone = 'v.1.1.0';
+            } else if (body.includes('v.1.0.0') || body.includes('v1.0.0')) {
+              milestone = 'v.1.0.0';
+            }
+
+            // If milestone specified, add it
+            if (milestone) {
+              try {
+                // Get all milestones
+                const milestonesResponse = await github.rest.issues.listMilestones({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo
+                });
+
+                const targetMilestone = milestonesResponse.data.find(m => m.title === milestone);
+
+                if (targetMilestone) {
+                  await github.rest.issues.update({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: pr.number,
+                    milestone: targetMilestone.number
+                  });
+                  console.log(`Added milestone: ${milestone}`);
+                }
+              } catch (error) {
+                console.log(`Could not add milestone: ${error.message}`);
+              }
+            }
+
+      - name: Create comment with PR checklist
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const comment = `## PR Automation Complete ✅
+
+This PR has been automatically configured with:
+- ✅ **Labels**: Added based on PR type (feature/bug/docs/infra)
+- ✅ **Assignee**: Assigned to @${pr.user.login} (creator)
+- ✅ **Milestone**: Set based on issue reference
+- ℹ️ **Project**: Ready for project board assignment
+
+### Before Merge Checklist
+- [ ] All CI checks pass (tests, lint, type-check)
+- [ ] OpenAPI spec is valid
+- [ ] Code review approved
+- [ ] Commit messages follow Conventional Commits
+- [ ] Tests have adequate coverage (70%+ required)
+- [ ] Documentation updated if applicable
+- [ ] No merge conflicts
+
+See [CLAUDE.md](CLAUDE.md) for project standards.`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              body: comment
+            });

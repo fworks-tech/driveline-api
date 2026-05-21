@@ -1,4 +1,5 @@
 from drf_spectacular.utils import extend_schema
+from requests.exceptions import RequestException, Timeout
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -143,9 +144,28 @@ class PlanRouteView(APIView):
 
         except ValueError as exc:
             return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except Timeout:
+            return Response(
+                {
+                    "error": "upstream_timeout",
+                    "detail": "External API request timed out. Please try again later.",
+                },
+                status=status.HTTP_504_GATEWAY_TIMEOUT,
+            )
+        except RequestException as exc:
+            return Response(
+                {
+                    "error": "upstream_error",
+                    "detail": f"External API error: {str(exc)}. Please try again later.",
+                },
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
         except Exception as exc:
             return Response(
-                {"error": f"Route planning failed: {str(exc)}"},
+                {
+                    "error": "internal_error",
+                    "detail": f"An unexpected error occurred: {str(exc)}",
+                },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
