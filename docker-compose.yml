@@ -1,6 +1,9 @@
+name: spotter-api
+
 services:
   db:
     image: postgres:15-alpine
+    container_name: spotter-api-db
     environment:
       POSTGRES_DB: spotter
       POSTGRES_USER: spotter
@@ -17,6 +20,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    container_name: spotter-api-redis
     ports:
       - "6379:6379"
     healthcheck:
@@ -27,9 +31,8 @@ services:
 
   web:
     build: .
-    command: >
-      sh -c "python manage.py migrate --noinput &&
-      python manage.py runserver 0.0.0.0:8000"
+    image: spotter-api-web
+    container_name: spotter-api-web
     env_file:
       - .env
     environment:
@@ -60,3 +63,4 @@ services:
 
 volumes:
   postgres_data:
+    name: spotter-api-postgres-data
