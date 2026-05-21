@@ -1,4 +1,5 @@
 import json
+import os
 from functools import wraps
 
 import requests
@@ -6,6 +7,11 @@ from django.core.cache import cache
 
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 OSRM_URL = "https://router.project-osrm.org/route/v1/driving"
+
+# User-Agent for external API requests (avoid personal email)
+USER_AGENT = os.environ.get(
+    "API_USER_AGENT", "SpotterELD/1.0 (support@spotter-eld.app)"
+)
 
 # Cache TTL in seconds (24 hours for geocoding, 48 hours for routes)
 GEOCODE_CACHE_TIMEOUT = 86400
@@ -48,7 +54,7 @@ def geocode(address: str) -> tuple[float, float]:
     resp = requests.get(
         NOMINATIM_URL,
         params={"q": address, "format": "json", "limit": 1},
-        headers={"User-Agent": "SpotterELD/1.0 (fritzelborges@gmail.com)"},
+        headers={"User-Agent": USER_AGENT},
         timeout=10,
     )
     resp.raise_for_status()
