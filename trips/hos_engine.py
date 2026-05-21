@@ -14,6 +14,10 @@ Rules enforced:
 
 from __future__ import annotations
 
+import json
+
+from django.core.cache import cache
+
 FUEL_INTERVAL_MILES = 1000.0
 FUEL_STOP_HOURS = 0.5  # 30 minutes
 PICKUP_HOURS = 1.0
@@ -24,6 +28,33 @@ BREAK_DRIVE_THRESHOLD = 8.0  # drive hours before mandatory 30-min break
 BREAK_DURATION = 0.5  # 30 minutes
 REST_DURATION = 10.0  # 10-hour reset
 MAX_CYCLE_HOURS = 70.0
+
+# Cache HOS simulations for 24 hours (they're deterministic for given inputs)
+HOS_CACHE_TIMEOUT = 86400
+
+
+def _make_hos_cache_key(
+    total_distance_miles: float,
+    leg1_hours: float,
+    leg2_hours: float,
+    current_cycle_used_hours: float,
+    leg1_miles: float,
+    leg2_miles: float,
+) -> str:
+    """Generate cache key for HOS simulation parameters (memcached-safe)."""
+    import hashlib
+
+    params = {
+        "total_distance_miles": total_distance_miles,
+        "leg1_hours": leg1_hours,
+        "leg2_hours": leg2_hours,
+        "current_cycle_used_hours": current_cycle_used_hours,
+        "leg1_miles": leg1_miles,
+        "leg2_miles": leg2_miles,
+    }
+    params_json = json.dumps(params, sort_keys=True)
+    hash_val = hashlib.md5(params_json.encode()).hexdigest()
+    return f"hos_simulation_{hash_val}"
 
 
 def simulate_trip(
@@ -40,6 +71,19 @@ def simulate_trip(
     leg1 = current_location -> pickup
     leg2 = pickup -> dropoff
     """
+    # Check cache first
+    cache_key = _make_hos_cache_key(
+        total_distance_miles,
+        leg1_hours,
+        leg2_hours,
+        current_cycle_used_hours,
+        leg1_miles,
+        leg2_miles,
+    )
+    cached_result = cache.get(cache_key)
+    if cached_result is not None:
+        return cached_result
+
     events: list[dict] = []
     current_time = 0.0  # hours elapsed since trip start
 
@@ -325,10 +369,15 @@ def simulate_trip(
             }
         )
 
-    return {
+    result = {
         "logbook_days": logbook_days,
         "total_trip_hours": round(total_trip_hours, 2),
         "total_driving_hours": round(total_driving_hours, 2),
         "num_fuel_stops": state["num_fuel_stops"],
         "num_rest_stops": state["num_rest_stops"],
     }
+
+    # Cache the result for future identical requests
+    cache.set(cache_key, result, HOS_CACHE_TIMEOUT)
+
+    return result
