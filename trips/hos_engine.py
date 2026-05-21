@@ -125,7 +125,7 @@ def simulate_trip(
     def do_fuel(label: str = "Fuel Stop") -> None:
         """Insert a 30-minute on-duty fuel stop."""
         start_shift_if_needed()
-        add_event("ON_DUTY_ND", FUEL_STOP_HOURS, label)
+        add_event("ON_DUTY_NOT_DRIVING", FUEL_STOP_HOURS, label)
         state["shift_on_duty"] += FUEL_STOP_HOURS
         state["cycle_hours"] += FUEL_STOP_HOURS
         state["miles_since_fuel"] = 0.0
@@ -227,7 +227,7 @@ def simulate_trip(
         if remaining_window() < duration or remaining_cycle() < duration:
             do_rest()
             start_shift_if_needed()
-        add_event("ON_DUTY_ND", duration, label, location)
+        add_event("ON_DUTY_NOT_DRIVING", duration, label, location)
         state["shift_on_duty"] += duration
         state["cycle_hours"] += duration
 
@@ -280,7 +280,7 @@ def simulate_trip(
 
             if ev["status"] == "DRIVING":
                 day_drive += seg_end - seg_start
-            if ev["status"] in ("DRIVING", "ON_DUTY_ND"):
+            if ev["status"] in ("DRIVING", "ON_DUTY_NOT_DRIVING"):
                 day_on_duty += seg_end - seg_start
 
         # Fill gaps with OFF_DUTY

@@ -2,7 +2,7 @@ import pytest
 
 from trips.hos_engine import simulate_trip
 
-VALID_STATUSES = {"OFF_DUTY", "SLEEPER_BERTH", "DRIVING", "ON_DUTY_ND"}
+VALID_STATUSES = {"OFF_DUTY", "SLEEPER_BERTH", "DRIVING", "ON_DUTY_NOT_DRIVING"}
 
 
 def make_trip(
@@ -32,15 +32,15 @@ class TestHOSEngineRules:
     """Unit tests for FMCSA Hours of Service simulate_trip() engine."""
 
     def test_rule_1_pickup_and_dropoff_on_duty_events(self):
-        """Rule 1: 1-hour ON_DUTY_ND events are inserted at pickup and dropoff."""
+        """Rule 1: 1-hour ON_DUTY_NOT_DRIVING events are inserted at pickup and dropoff."""
         result = make_trip(300)
         all_events = [e for day in result["logbook_days"] for e in day["events"]]
         pickup = [e for e in all_events if e.get("label") == "Pickup"]
         dropoff = [e for e in all_events if e.get("label") == "Dropoff"]
         assert len(pickup) == 1
         assert len(dropoff) == 1
-        assert pickup[0]["status"] == "ON_DUTY_ND"
-        assert dropoff[0]["status"] == "ON_DUTY_ND"
+        assert pickup[0]["status"] == "ON_DUTY_NOT_DRIVING"
+        assert dropoff[0]["status"] == "ON_DUTY_NOT_DRIVING"
         assert pickup[0]["duration_hours"] == pytest.approx(1.0)
         assert dropoff[0]["duration_hours"] == pytest.approx(1.0)
 
