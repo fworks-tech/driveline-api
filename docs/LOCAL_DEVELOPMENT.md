@@ -523,6 +523,9 @@ Use this to confirm everything is working:
 
 ---
 
+## Additional Frontend Commands
+
+```bash
 npm run build                      # Build for production
 npm run preview                    # Preview production build
 ```

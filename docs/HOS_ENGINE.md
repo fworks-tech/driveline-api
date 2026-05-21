@@ -315,7 +315,7 @@ The engine maintains these accumulators during simulation:
 
 ### Test File
 
-`tests/test_hos_engine.py`
+`trips/tests/test_hos_engine.py`
 
 ### Run Tests
 
