@@ -1,6 +1,9 @@
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from drf_spectacular.utils import extend_schema
 from requests.exceptions import RequestException, Timeout
 from rest_framework import status
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -21,13 +24,16 @@ class HealthCheckView(APIView):
 
 class PlanRouteView(APIView):
     """
-    POST /api/plan-route/
+    POST /api/v1/plan-route/
 
     Accepts trip details, geocodes locations, fetches route from OSRM,
     runs HOS simulation, and returns full trip data.
+
+    Authentication is optional - allows both authenticated and public requests.
     """
 
     serializer_class = TripInputSerializer
+    permission_classes = [AllowAny]
 
     @extend_schema(
         request=TripInputSerializer,
@@ -217,3 +223,99 @@ def _build_stop_markers(
         )
 
     return markers
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class TokenObtainView(APIView):
+    """
+    POST /api/v1/auth/token/
+
+    Obtain JWT tokens using username and password.
+    """
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        description="Obtain JWT access and refresh tokens",
+        request={
+            "application/json": {
+                "type": "object",
+                "properties": {
+                    "username": {"type": "string"},
+                    "password": {"type": "string"},
+                },
+                "required": ["username", "password"],
+            }
+        },
+        responses={
+            200: {
+                "type": "object",
+                "properties": {
+                    "access": {"type": "string", "description": "JWT access token"},
+                    "refresh": {"type": "string", "description": "JWT refresh token"},
+                },
+            },
+        },
+    )
+    def post(self, request):
+        from .serializers import CustomTokenObtainPairSerializer
+
+        serializer = CustomTokenObtainPairSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
+
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class UserRegistrationView(APIView):
+    """
+    POST /api/v1/auth/register/
+
+    Register a new user account.
+    """
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        description="Register a new user account",
+        request={
+            "application/json": {
+                "type": "object",
+                "properties": {
+                    "username": {"type": "string"},
+                    "email": {"type": "string", "format": "email"},
+                    "password": {"type": "string", "minLength": 8},
+                },
+                "required": ["username", "email", "password"],
+            }
+        },
+        responses={
+            201: {
+                "type": "object",
+                "properties": {
+                    "id": {"type": "integer"},
+                    "username": {"type": "string"},
+                    "email": {"type": "string"},
+                },
+            },
+        },
+    )
+    def post(self, request):
+        from .serializers import UserRegistrationSerializer
+
+        serializer = UserRegistrationSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        user = serializer.save()
+        return Response(
+            {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+            },
+            status=status.HTTP_201_CREATED,
+        )
