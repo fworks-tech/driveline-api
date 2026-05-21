@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Branch per GitHub issue** — format: `feat/issue-123-name` or `fix/issue-456-name`
 - **One PR per issue** — 1:1:1 mapping (issue → branch → PR)
 - **Close issues after merge** — manually verify closure; do not leave follow-up issues open
-- **Add milestones and labels** to every GitHub issue before starting work
+- **Automated PR Configuration** — Labels, assignee, milestones, and project status are automatically applied when PRs open (see [PR_AUTOMATION.md](docs/PR_AUTOMATION.md))
 
 ### Issue Tracking
 - GitHub Issues = tickets; always create one before starting work

@@ -580,6 +580,424 @@ CORS_ALLOWED_ORIGINS=https://spotter-eld.app,https://staging-spotter.vercel.app
 
 ---
 
+## 🔗 API Versioning Strategy
+
+### Current State (v1.0.0-alpha-api)
+
+**Single endpoint, no versioning required.** The API currently has one endpoint (`/api/plan-route/`) with no breaking changes anticipated in the immediate release cycle.
+
+### Versioning Plan (v1.0.0-api and Beyond)
+
+When versioning becomes necessary:
+
+```
+/api/v1/plan-route/     # v1.0.0-api and later
+/api/v2/plan-route/     # Future major version
+```
+
+### Strategy: URL-Based Versioning
+
+**Why URL-based?**
+- Clear in logs and monitoring
+- No header parsing required
+- Explicit in API documentation
+- Frontend always knows which version it's calling
+
+### Implementing API Versions
+
+**Step 1: Create version-specific URL patterns**
+```python
+# trips/urls.py
+urlpatterns = [
+    path("v1/plan-route/", PlanRouteViewV1.as_view(), name="plan-route-v1"),
+    path("v2/plan-route/", PlanRouteViewV2.as_view(), name="plan-route-v2"),
+]
+```
+
+**Step 2: Separate serializer versions**
+```python
+# trips/serializers.py
+class PlanRouteSerializerV1(serializers.Serializer):
+    current_location = serializers.CharField()
+    pickup_location = serializers.CharField()
+    dropoff_location = serializers.CharField()
+    cycle_hours_used = serializers.FloatField()
+
+class PlanRouteSerializerV2(serializers.Serializer):
+    current_location = serializers.CharField()
+    pickup_location = serializers.CharField()
+    dropoff_location = serializers.CharField()
+    cycle_hours_used = serializers.FloatField()
+    # V2: New field
+    preferred_rest_type = serializers.ChoiceField(choices=["OFF_DUTY", "SLEEPER_BERTH"])
+```
+
+**Step 3: Maintain backward compatibility**
+- Keep V1 views and serializers indefinitely
+- Mark V1 as "deprecated but supported" in documentation
+- Set deprecation timeline (e.g., "V1 will be retired 2026-12-31")
+
+### Deprecation Policy
+
+| Phase | Duration | Action |
+|-------|----------|--------|
+| **Active** | Indefinite | Both V1 and V2 fully supported |
+| **Deprecated** | 6 months | V1 marked deprecated, migration guides provided |
+| **Sunset** | Final 3 months | V1 accepts requests, returns deprecation warning |
+| **Removed** | On retirement date | V1 returns 410 Gone |
+
+### Example: Deprecation Header
+
+```python
+# trips/views.py
+class PlanRouteViewV1(APIView):
+    def post(self, request):
+        response = Response({...})
+        response['Deprecation'] = 'true'
+        response['Sunset'] = 'Sat, 31 Dec 2026 23:59:59 GMT'
+        response['Link'] = '</api/v2/plan-route/>; rel="successor-version"'
+        return response
+```
+
+### OpenAPI Schema Versioning
+
+Update `docs/openapi.yaml`:
+```yaml
+servers:
+  - url: https://api.spotter-eld.app/api/v1
+    description: Latest stable (production)
+  - url: https://api.spotter-eld.app/api/v2
+    description: Next major version (beta)
+```
+
+---
+
+## 🔒 Security Considerations
+
+### Input Validation (Defense Layer 1)
+
+**DRF Serializers validate all inputs:**
+```python
+class PlanRouteSerializer(serializers.Serializer):
+    current_location = serializers.CharField(
+        min_length=2,
+        max_length=500,
+        required=True
+    )
+    cycle_hours_used = serializers.FloatField(
+        min_value=0.0,
+        max_value=70.0
+    )
+```
+
+**Benefits:**
+- Type safety (rejects non-strings, non-floats)
+- Length limits (prevents DoS via massive strings)
+- Range validation (enforces business rules)
+
+### External API Safety (Defense Layer 2)
+
+**Nominatim & OSRM API calls use:**
+- 5-second timeouts (prevents hanging requests)
+- No authentication required (public APIs)
+- Response validation (expects specific JSON structure)
+- Error handling (graceful degradation on API failure)
+
+```python
+def geocode(address: str) -> tuple[float, float] | None:
+    try:
+        response = requests.get(
+            'https://nominatim.openstreetmap.org/search',
+            params={'q': address, 'format': 'json'},
+            timeout=5  # Timeout prevents hanging
+        )
+        # Validate response structure
+        if response.json() and 'lat' in response.json()[0]:
+            data = response.json()[0]
+            return float(data['lat']), float(data['lon'])
+    except (requests.Timeout, ValueError, KeyError):
+        return None
+```
+
+### CORS Configuration (Defense Layer 3)
+
+**Development (allow all origins):**
+```python
+CORS_ALLOW_ALL_ORIGINS = True
+```
+
+**Production (whitelist only known domains):**
+```python
+CORS_ALLOWED_ORIGINS = [
+    "https://spotter-eld.app",
+    "https://staging-spotter.vercel.app"
+]
+```
+
+### No Hardcoded Secrets
+
+- ✅ All sensitive config in `.env` file
+- ✅ `.env.example` shows template only
+- ✅ `.env` is `.gitignore`d (never committed)
+- ✅ Environment variables loaded via `python-dotenv`
+
+```python
+# settings.py
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+DJANGO_SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
+```
+
+### Database Security (Future)
+
+When database persistence is added:
+- ✅ Use Django ORM (parameterized queries prevent SQL injection)
+- ✅ Add authentication (JWT or session-based)
+- ✅ Hash passwords with Django's built-in `make_password()`
+- ✅ Implement role-based access control (RBAC)
+- ✅ Add audit logging for data access
+
+### Rate Limiting (Future)
+
+Planned for v1.0.0-beta:
+```python
+# settings.py
+REST_FRAMEWORK = {
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '60/hour',      # 60 requests per hour for anonymous users
+        'user': '1000/hour'     # 1000 requests per hour for authenticated users
+    }
+}
+```
+
+### Error Response Safety
+
+**Never expose internal details in error responses:**
+
+```python
+# ❌ UNSAFE: Exposes implementation details
+{
+    "error": "Exception: Failed to connect to Nominatim at 127.0.0.1:5432"
+}
+
+# ✅ SAFE: Generic error message
+{
+    "error": "server_error",
+    "detail": "An unexpected error occurred. Please try again.",
+    "status_code": 500
+}
+```
+
+### Security Checklist for Agents
+
+Before committing code:
+- [ ] No hardcoded API keys, passwords, or secrets
+- [ ] All user input validated via serializers
+- [ ] No SQL injection risks (use Django ORM)
+- [ ] No XSS risks (API returns JSON, not HTML)
+- [ ] CORS headers configured correctly
+- [ ] Error messages don't expose internals
+- [ ] External API calls have timeouts
+- [ ] Response data doesn't leak PII
+
+---
+
+## ⚡ Performance Optimization
+
+### Current Bottlenecks
+
+```
+Total Request Time: 2–5 seconds (dominated by external APIs)
+├── Nominatim Geocoding (3 calls): 1–2 sec each → 3–6 sec
+├── OSRM Routing (2 calls): 1–2 sec each → 2–4 sec
+├── HOS Engine Simulation: <500 ms
+└── Django Request/Response: <100 ms
+```
+
+### Optimization Strategies
+
+#### 1. **Caching (Highest Impact)**
+
+**In-Memory Cache (Development):**
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=128)
+def geocode(address: str) -> tuple[float, float] | None:
+    # Same address → cached result (instant)
+    # Different address → API call
+    ...
+```
+
+**Redis Cache (Production):**
+```python
+from django.core.cache import cache
+
+def geocode(address: str) -> tuple[float, float] | None:
+    cache_key = f"geocode:{address}"
+    cached_result = cache.get(cache_key)
+    if cached_result:
+        return cached_result
+    
+    result = _call_nominatim(address)
+    cache.set(cache_key, result, timeout=86400)  # Cache 24 hours
+    return result
+```
+
+**Impact:** Repeat requests for same cities → <100 ms (instead of 2–5 sec)
+
+#### 2. **Parallel API Calls**
+
+**Current (Sequential):**
+```
+geocode(current) → geocode(pickup) → geocode(dropoff) → get_route() → get_route()
+Total: 6–10 seconds
+```
+
+**Optimized (Parallel):**
+```python
+import asyncio
+
+async def plan_route_async(request_data):
+    # Call all geocodings in parallel
+    coords = await asyncio.gather(
+        geocode_async(request_data['current_location']),
+        geocode_async(request_data['pickup_location']),
+        geocode_async(request_data['dropoff_location']),
+    )
+    
+    # Then call both routes in parallel
+    routes = await asyncio.gather(
+        get_route_async(coords[0], coords[1]),
+        get_route_async(coords[1], coords[2]),
+    )
+    
+    return routes
+```
+
+**Impact:** 6–10 sec → 2–3 sec (3–5× faster)
+
+#### 3. **Connection Pooling**
+
+**Reuse HTTP connections instead of creating new ones:**
+```python
+import requests
+from requests.adapters import HTTPAdapter
+
+session = requests.Session()
+adapter = HTTPAdapter(
+    pool_connections=10,
+    pool_maxsize=10,
+    max_retries=3
+)
+session.mount('http://', adapter)
+session.mount('https://', adapter)
+
+# All requests reuse connections
+response = session.get('https://nominatim.openstreetmap.org/search', ...)
+```
+
+**Impact:** ~100 ms saved per request (5–10% improvement)
+
+#### 4. **Query Optimization (Future with Database)**
+
+**Problem: N+1 Queries**
+```python
+# ❌ SLOW: 1 + N queries
+trips = Trip.objects.all()  # Query 1
+for trip in trips:
+    print(trip.user.name)   # Query N (one per trip)
+```
+
+**Solution: Use `select_related()`**
+```python
+# ✅ FAST: 1 query with JOIN
+trips = Trip.objects.select_related('user').all()
+for trip in trips:
+    print(trip.user.name)   # No additional queries
+```
+
+**Impact:** 100+ trips: 100 queries → 1 query (100× faster)
+
+#### 5. **Response Compression**
+
+**Enable gzip compression on responses:**
+```python
+# settings.py
+MIDDLEWARE = [
+    'django.middleware.gzip.GZipMiddleware',  # Must be early
+    # ... other middleware
+]
+```
+
+**Impact:** ~5 KB response → ~1 KB (80% compression)
+
+#### 6. **Database Indexing (Future)**
+
+**Create indexes on frequently queried columns:**
+```python
+class Trip(models.Model):
+    user_id = models.BigIntegerField(db_index=True)
+    created_at = models.DateTimeField(db_index=True)
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['user_id', '-created_at']),
+        ]
+```
+
+**Impact:** Full table scans → indexed lookups (1000× faster on 1M+ rows)
+
+### Performance Targets
+
+| Operation | Current | Target | Strategy |
+|-----------|---------|--------|----------|
+| **Geocoding** | 3–6 sec | <1 sec | Redis cache + parallel calls |
+| **Routing** | 2–4 sec | <1 sec | Parallel calls + connection pooling |
+| **HOS Simulation** | <500 ms | <100 ms | Algorithm optimization (optional) |
+| **Total Request** | 2–5 sec | <2 sec | Cache hits for repeat trips |
+
+### Monitoring Performance
+
+**Track these metrics in production:**
+```python
+# settings.py
+LOGGING = {
+    'version': 1,
+    'handlers': {
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'logs/api.log',
+        },
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['file'],
+            'level': 'INFO',
+        },
+    },
+}
+```
+
+**Sample log:**
+```
+[20/May/2026 14:36:22] "POST /api/plan-route/ HTTP/1.1" 200 5234 (2345ms)
+```
+
+**Use APM tools (optional):**
+- New Relic — Real-time performance monitoring
+- Sentry — Error tracking and performance
+- Datadog — Infrastructure and application monitoring
+
+---
+
 ## 🔮 Future Enhancements
 
 ### Short Term
