@@ -33,7 +33,11 @@ def _build_database_config(database_url: str) -> dict:
 
     if parsed.scheme == "sqlite":
         sqlite_path = parsed.path or ""
-        if sqlite_path.startswith("/") and len(sqlite_path) > 2 and sqlite_path[2] == ":":
+        if (
+            sqlite_path.startswith("/")
+            and len(sqlite_path) > 2
+            and sqlite_path[2] == ":"
+        ):
             db_path = Path(sqlite_path.lstrip("/"))
         elif sqlite_path.startswith("/"):
             db_path = BASE_DIR / sqlite_path.lstrip("/")
@@ -51,6 +55,7 @@ def _build_database_config(database_url: str) -> dict:
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
     }
+
 
 INSTALLED_APPS = [
     "django.contrib.auth",
