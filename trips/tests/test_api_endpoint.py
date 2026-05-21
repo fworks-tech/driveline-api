@@ -1,16 +1,19 @@
 import json
 from unittest.mock import patch
 
+from django.core.cache import cache
 from django.test import Client, TestCase
+from requests.exceptions import ConnectTimeout, ReadTimeout
 
 
 class TestPlanRouteAPI(TestCase):
     """Integration tests for POST /api/plan-route/ endpoint."""
 
     def setUp(self):
-        """Initialize test client."""
+        """Initialize test client and clear cache."""
         self.client = Client()
         self.endpoint = "/api/plan-route/"
+        cache.clear()
 
     @patch("trips.routing.geocode")
     @patch("trips.routing.get_route")
@@ -230,6 +233,107 @@ class TestPlanRouteAPI(TestCase):
             content_type="application/json",
         )
         # CORS headers verified by Django middleware
+
+    @patch("trips.routing.requests.get")
+    def test_geocoding_timeout(self, mock_get):
+        """Test handling of geocoding timeout (ReadTimeout)."""
+        mock_get.side_effect = ReadTimeout("Connection timed out")
+
+        response = self.client.post(
+            self.endpoint,
+            data=json.dumps(
+                {
+                    "current_location": "Chicago, IL",
+                    "pickup_location": "Indianapolis, IN",
+                    "dropoff_location": "Dallas, TX",
+                    "cycle_hours_used": 30,
+                }
+            ),
+            content_type="application/json",
+        )
+
+        assert response.status_code == 504
+        data = response.json()
+        assert data["error"] == "upstream_timeout"
+
+    @patch("trips.routing.requests.get")
+    def test_routing_connect_timeout(self, mock_get):
+        """Test handling of routing API timeout (ConnectTimeout)."""
+        from unittest.mock import MagicMock
+
+        # Create a mock response object that works for geocoding
+        def create_geocode_response():
+            mock_resp = MagicMock()
+            mock_resp.json.return_value = [{"lat": "41.8781", "lon": "-87.6298"}]
+            mock_resp.raise_for_status.return_value = None
+            return mock_resp
+
+        # Configure side_effect: 3 successful geocode calls, then timeout on routing
+        mock_get.side_effect = [
+            create_geocode_response(),  # geocode Chicago
+            create_geocode_response(),  # geocode Indianapolis
+            create_geocode_response(),  # geocode Dallas
+            ConnectTimeout("Failed to connect"),  # routing fails
+        ]
+
+        response = self.client.post(
+            self.endpoint,
+            data=json.dumps(
+                {
+                    "current_location": "Chicago, IL",
+                    "pickup_location": "Indianapolis, IN",
+                    "dropoff_location": "Dallas, TX",
+                    "cycle_hours_used": 30,
+                }
+            ),
+            content_type="application/json",
+        )
+
+        assert response.status_code == 504
+        data = response.json()
+        assert data["error"] == "upstream_timeout"
+
+    @patch("trips.routing.requests.get")
+    def test_upstream_generic_error(self, mock_get):
+        """Test handling of generic upstream errors (HTTPError)."""
+        from unittest.mock import MagicMock
+
+        from requests.exceptions import HTTPError
+
+        def create_geocode_response():
+            mock_resp = MagicMock()
+            mock_resp.json.return_value = [{"lat": "41.8781", "lon": "-87.6298"}]
+            mock_resp.raise_for_status.return_value = None
+            return mock_resp
+
+        # Configure side_effect: 3 successful geocode calls, then HTTP error on routing
+        mock_resp_error = MagicMock()
+        mock_resp_error.raise_for_status.side_effect = HTTPError("500 Server Error")
+
+        mock_get.side_effect = [
+            create_geocode_response(),  # geocode Chicago
+            create_geocode_response(),  # geocode Indianapolis
+            create_geocode_response(),  # geocode Dallas
+            mock_resp_error,  # routing returns error response
+        ]
+
+        response = self.client.post(
+            self.endpoint,
+            data=json.dumps(
+                {
+                    "current_location": "Chicago, IL",
+                    "pickup_location": "Indianapolis, IN",
+                    "dropoff_location": "Dallas, TX",
+                    "cycle_hours_used": 30,
+                }
+            ),
+            content_type="application/json",
+        )
+
+        # HTTPError should return 502
+        assert response.status_code == 502
+        data = response.json()
+        assert data["error"] == "upstream_error"
 
 
 class TestHealthCheckAPI(TestCase):
