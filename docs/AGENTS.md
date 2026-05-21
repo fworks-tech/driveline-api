@@ -491,18 +491,101 @@ Before creating a PR, agents should verify:
 
 ---
 
+## 🔐 Security Considerations
+
+### Defense-in-Depth Strategy
+
+This project uses **layered security** to protect against common vulnerabilities:
+
+**Layer 1: Input Validation (DRF Serializers)**
+- Type checking (rejects non-strings, non-floats)
+- Length limits (prevents DoS via massive inputs)
+- Range validation (enforces business rules like 0-70 cycle hours)
+- Regex patterns (for structured inputs)
+
+**Layer 2: External API Safety**
+- Timeouts on all external calls (5-10 seconds max)
+- Response validation (verify expected JSON structure)
+- No authentication tokens passed to public APIs
+- Error handling (graceful degradation on API failure)
+
+**Layer 3: CORS Configuration**
+- Development: Allow all origins
+- Production: Whitelist only known frontend domains
+- Prevents cross-site request attacks from unauthorized origins
+
+**Layer 4: Environment Security**
+- All secrets in `.env` file (never committed)
+- `.env.example` shows template only (no real values)
+- Load via `python-dotenv` at startup
+- Never log sensitive data
+
+**Layer 5: Error Handling**
+- Never expose stack traces in production responses
+- Generic error messages to users ("An error occurred")
+- Detailed error logs server-side for debugging
+- No PII or internal implementation details in responses
+
+**Layer 6: Future Protections**
+- Rate limiting (v1.0.0-beta) — prevent brute force, DoS
+- Database encryption (future) — for persisted trip data
+- HTTPS enforcement (production only)
+- Audit logging (future) — track who accessed what
+
+### Common Attack Vectors & Mitigations
+
+| Attack | Vector | Mitigation | Status |
+|--------|--------|-----------|--------|
+| **SQL Injection** | User input in queries | Django ORM (parameterized) | ✅ Safe |
+| **XSS** | User input in HTML | API returns JSON only | ✅ Safe |
+| **CSRF** | Cross-site requests | CORS whitelist | ✅ Safe |
+| **DoS** | Massive requests | Input size limits, rate limiting (future) | ⚠️ Partial |
+| **Brute Force** | Password guessing | No auth yet, planned JWT | ⚠️ N/A |
+| **Man-in-Middle** | Unencrypted traffic | HTTPS required (production) | ⚠️ Partial |
+| **Secret Leakage** | Hardcoded credentials | .env + .gitignore | ✅ Safe |
+
+### Best Practices for Agent Code
+
+1. **Always validate input** at the serializer level, never trust user data
+2. **Never commit secrets** — if you add an API key, it will be caught by pre-commit hooks
+3. **Use Django ORM** for all database operations (parameterized queries)
+4. **Add timeouts** to any external API calls (minimum 5 seconds, maximum 30 seconds)
+5. **Test error paths** — what happens when Nominatim is down? OSRM times out?
+6. **Log securely** — don't log passwords, API keys, or PII
+7. **Follow the principle of least privilege** — functions should only have access to data they need
+
+### Security Review Triggers
+
+Agents should ask for human review if:
+- Adding authentication or authorization
+- Changing CORS configuration
+- Adding database access (future)
+- Handling passwords or tokens (future)
+- Using cryptography
+- Any changes to `.env.example` or secrets handling
+
+### Reference
+
+See [ARCHITECTURE.md - Security Considerations](ARCHITECTURE.md#-security-considerations) for detailed security implementation guidance.
+
+---
+
 ## 🔐 Security Checklist for Agents
 
 Before merging any code, verify:
 
-- [ ] No hardcoded API keys
-- [ ] No credentials in code
-- [ ] No secrets in environment files
-- [ ] Input validation present (Serializer level)
-- [ ] SQL injection prevention (use ORM)
-- [ ] CORS headers configured correctly
-- [ ] Authentication required on protected endpoints
-- [ ] Rate limiting considered
+- [ ] No hardcoded API keys or secrets
+- [ ] No credentials in code or committed files
+- [ ] `.env` and `.env.local` are in `.gitignore`
+- [ ] Input validation present (Serializer level) for all user inputs
+- [ ] SQL injection prevention (use Django ORM, not raw SQL)
+- [ ] CORS headers configured correctly for environment
+- [ ] All external API calls have timeouts (5-30 seconds)
+- [ ] Error responses don't expose internal implementation details
+- [ ] No PII (passwords, emails, addresses) in logs
+- [ ] Authentication required on protected endpoints (if applicable)
+- [ ] Rate limiting considered for high-traffic endpoints
+- [ ] Security test cases written (invalid inputs, API failures, etc.)
 
 ---
 
