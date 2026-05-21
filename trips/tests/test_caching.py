@@ -15,7 +15,7 @@ import pytest
 from django.core.cache import cache
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 class TestGeocodeCache:
     """Test geocoding caching."""
 
