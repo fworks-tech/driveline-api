@@ -41,12 +41,12 @@ servers:
     description: Staging API
 
 paths:
-  /api/health/:
+  /api/v1/health/:
     get:
       tags:
         - Health
       summary: API health check
-      operationId: health_api
+      operationId: health_v1_health
       responses:
         "200":
           description: API is healthy
