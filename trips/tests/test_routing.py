@@ -1,11 +1,17 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
+from django.core.cache import cache
+
 from trips.routing import geocode, get_route
 
 
 class TestGeocoding(unittest.TestCase):
     """Unit tests for Nominatim geocoding integration."""
+
+    def setUp(self):
+        """Clear cache before each test."""
+        cache.clear()
 
     @patch("trips.routing.requests.get")
     def test_geocode_valid_address(self, mock_get):
@@ -56,6 +62,10 @@ class TestGeocoding(unittest.TestCase):
 
 class TestRouting(unittest.TestCase):
     """Unit tests for OSRM routing integration."""
+
+    def setUp(self):
+        """Clear cache before each test."""
+        cache.clear()
 
     @patch("trips.routing.requests.get")
     def test_get_route_valid_waypoints(self, mock_get):
