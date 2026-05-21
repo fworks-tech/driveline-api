@@ -5,7 +5,6 @@ Tests for OpenAPI validation script.
 import json
 import tempfile
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 import yaml
