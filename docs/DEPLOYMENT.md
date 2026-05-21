@@ -83,7 +83,7 @@ curl https://your-railway-domain/health/
 Test full API endpoint:
 
 ```bash
-curl -X POST https://your-railway-domain/api/plan-route/ \
+curl -X POST https://your-railway-domain/api/v1/plan-route/ \
   -H "Content-Type: application/json" \
   -d '{
     "current_location": "Chicago, IL",
@@ -198,7 +198,7 @@ Before deployment:
 - [ ] Set up Redis cache
 - [ ] Set `DATABASE_URL` and `REDIS_URL`
 - [ ] Test health endpoint: `GET /health/`
-- [ ] Test API endpoint: `POST /api/plan-route/`
+- [ ] Test API endpoint: `POST /api/v1/plan-route/`
 - [ ] Monitor logs for errors
 - [ ] Set up monitoring/alerting
 

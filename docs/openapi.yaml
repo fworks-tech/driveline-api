@@ -91,7 +91,7 @@ paths:
               schema:
                 type: object
 
-  /api/plan-route/:
+  /api/v1/plan-route/:
     post:
       tags:
         - Route Planning

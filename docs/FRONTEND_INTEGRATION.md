@@ -15,7 +15,7 @@ Frontend (React)              Backend (Django)
 ┌──────────────────┐         ┌──────────────────┐
 │ http://3000      │         │ http://8000      │
 │                  │ POST    │                  │
-│ Trip Form ─────► /api/plan-route/ ──► HOS Engine
+│ Trip Form ─────► /api/v1/plan-route/ ──► HOS Engine
 │                  │         │   ↓              │
 │ ◄─────────────── │◄────────│ Response         │
 │ Route Map        │         │                  │
@@ -28,13 +28,13 @@ Frontend (React)              Backend (Django)
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| `POST` | `/api/plan-route/` | Plan a complete trip with HOS compliance |
+| `POST` | `/api/v1/plan-route/` | Plan a complete trip with HOS compliance |
 
 ---
 
 ## Request Contract
 
-### Endpoint: `POST /api/plan-route/`
+### Endpoint: `POST /api/v1/plan-route/`
 
 ```typescript
 // Frontend TypeScript interface

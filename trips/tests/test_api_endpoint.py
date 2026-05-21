@@ -5,12 +5,12 @@ from django.test import Client, TestCase
 
 
 class TestPlanRouteAPI(TestCase):
-    """Integration tests for POST /api/plan-route/ endpoint."""
+    """Integration tests for POST /api/v1/plan-route/ endpoint."""
 
     def setUp(self):
         """Initialize test client."""
         self.client = Client()
-        self.endpoint = "/api/plan-route/"
+        self.endpoint = "/api/v1/plan-route/"
 
     @patch("trips.routing.geocode")
     @patch("trips.routing.get_route")

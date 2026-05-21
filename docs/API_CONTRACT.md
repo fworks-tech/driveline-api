@@ -49,7 +49,7 @@ Content-Type: application/json
 
 ## Endpoints
 
-### POST /api/plan-route/
+### POST /api/v1/plan-route/
 
 Plan a complete trip with route calculation, HOS compliance checking, and ELD logbook generation.
 
