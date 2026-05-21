@@ -77,6 +77,20 @@ paths:
                     type: string
                     example: "ok"
 
+  /api/schema/:
+    get:
+      tags:
+        - Utilities
+      summary: Get OpenAPI schema
+      operationId: schema_retrieve
+      responses:
+        "200":
+          description: OpenAPI schema in JSON format
+          content:
+            application/json:
+              schema:
+                type: object
+
   /api/plan-route/:
     post:
       tags:

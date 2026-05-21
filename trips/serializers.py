@@ -21,10 +21,14 @@ class LogbookEventSerializer(serializers.Serializer):
     end_time = serializers.CharField(max_length=5)
     duration_hours = serializers.FloatField()
     label = serializers.CharField(max_length=255)
+    location = serializers.CharField(max_length=255, required=False, allow_blank=True)
 
 
 class LogbookDaySerializer(serializers.Serializer):
     day = serializers.IntegerField()
+    date_offset = serializers.IntegerField()
+    total_driving_hours = serializers.FloatField()
+    total_on_duty_hours = serializers.FloatField()
     events = LogbookEventSerializer(many=True)
 
 

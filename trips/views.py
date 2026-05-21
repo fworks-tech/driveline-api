@@ -112,11 +112,15 @@ class PlanRouteView(APIView):
                                 ev["end_hour"] - ev["start_hour"], 2
                             ),
                             "label": ev["label"],
+                            "location": ev.get("location", ""),
                         }
                     )
                 logbook_days_transformed.append(
                     {
-                        "day": day_idx + 1,
+                        "day": day["day"],
+                        "date_offset": day["date_offset"],
+                        "total_driving_hours": day["total_driving_hours"],
+                        "total_on_duty_hours": day["total_on_duty_hours"],
                         "events": events_transformed,
                     }
                 )
