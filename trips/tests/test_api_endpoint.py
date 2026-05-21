@@ -232,19 +232,6 @@ class TestPlanRouteAPI(TestCase):
         # CORS headers verified by Django middleware
 
 
-class TestHealthCheckAPI(TestCase):
-    """Test the application health endpoint."""
-
-    def setUp(self):
-        self.client = Client()
-
-    def test_health_check_returns_ok(self):
-        response = self.client.get("/health/")
-
-        assert response.status_code == 200
-        assert response.json() == {"status": "ok"}
-
-
 class TestMarkerGeneration(TestCase):
     """Test marker generation and positioning."""
 

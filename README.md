@@ -50,6 +50,7 @@ The backend runs at `http://localhost:8000`, the health check is at `http://loca
 
 - **Getting Started**
   - [Local Development Setup](docs/LOCAL_DEVELOPMENT.md) — Backend + frontend setup
+  - [PR Review Checklist](docs/PR_REVIEW_CHECKLIST.md) — Reviewer guidance for new pull requests
   - [API Contract](docs/API_CONTRACT.md) — Request/response schemas
   - [Deployment Strategy](../DEVOPS_STRATEGY.md) — Production setup
 
