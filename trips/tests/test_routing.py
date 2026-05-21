@@ -1,11 +1,13 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
+import pytest
 from django.core.cache import cache
 
 from trips.routing import geocode, get_route
 
 
+@pytest.mark.integration
 class TestGeocoding(unittest.TestCase):
     """Unit tests for Nominatim geocoding integration."""
 
@@ -60,6 +62,7 @@ class TestGeocoding(unittest.TestCase):
         assert result == (41.8781, -87.6298)
 
 
+@pytest.mark.integration
 class TestRouting(unittest.TestCase):
     """Unit tests for OSRM routing integration."""
 
