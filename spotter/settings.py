@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 
@@ -15,6 +16,46 @@ SECRET_KEY = os.environ.get(
 DEBUG = os.environ.get("DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = ["*"]
+
+
+def _build_database_config(database_url: str) -> dict:
+    parsed = urlparse(database_url)
+
+    if parsed.scheme in {"postgres", "postgresql"}:
+        return {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": parsed.path.lstrip("/"),
+            "USER": parsed.username or "",
+            "PASSWORD": parsed.password or "",
+            "HOST": parsed.hostname or "",
+            "PORT": parsed.port or "5432",
+        }
+
+    if parsed.scheme == "sqlite":
+        sqlite_path = parsed.path or ""
+        if (
+            sqlite_path.startswith("/")
+            and len(sqlite_path) > 2
+            and sqlite_path[2] == ":"
+        ):
+            db_path = Path(sqlite_path.lstrip("/"))
+        elif sqlite_path.startswith("/"):
+            db_path = BASE_DIR / sqlite_path.lstrip("/")
+        elif sqlite_path:
+            db_path = BASE_DIR / sqlite_path
+        else:
+            db_path = BASE_DIR / "db.sqlite3"
+
+        return {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": db_path,
+        }
+
+    return {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
+
 
 INSTALLED_APPS = [
     "django.contrib.auth",
@@ -49,12 +90,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "spotter.wsgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///db.sqlite3")
+DATABASES = {"default": _build_database_config(DATABASE_URL)}
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
@@ -65,9 +102,26 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # CORS — allow all origins for development
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+CORS_ALLOW_ALL_ORIGINS = not CORS_ALLOWED_ORIGINS
 CORS_ALLOW_METHODS = ["GET", "POST", "OPTIONS"]
 CORS_ALLOW_HEADERS = ["content-type", "authorization"]
+
+REDIS_URL = os.environ.get("REDIS_URL")
+CACHES = {
+    "default": {
+        "BACKEND": (
+            "django.core.cache.backends.redis.RedisCache"
+            if REDIS_URL
+            else "django.core.cache.backends.locmem.LocMemCache"
+        ),
+        "LOCATION": REDIS_URL or "spotter-local-cache",
+    }
+}
 
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(& \".\\\\venv\\\\Scripts\\\\Activate.ps1\")",
+      "PowerShell(pip install black isort)",
+      "PowerShell(pytest trips/tests/ -v --cov=trips --cov-report=html)"
+    ]
+  }
+}

@@ -8,6 +8,16 @@ from .routing import geocode, get_route
 from .serializers import TripInputSerializer, TripOutputSerializer
 
 
+class HealthCheckView(APIView):
+    """Simple liveness endpoint for container and deployment health checks."""
+
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+        return Response({"status": "ok"}, status=status.HTTP_200_OK)
+
+
 class PlanRouteView(APIView):
     """
     POST /api/plan-route/
@@ -83,17 +93,23 @@ class PlanRouteView(APIView):
             )
             markers.extend(stop_markers)
 
-            # 6. Transform logbook to match spec: convert hours to minutes, date_offset to day
+            # 6. Transform logbook to match spec: convert to ISO time format
             logbook_days_transformed = []
             for day_idx, day in enumerate(logbook["logbook_days"]):
                 events_transformed = []
                 for ev in day["events"]:
+                    # Convert hours since start to HH:MM format
+                    start_hours = int(ev["start_hour"])
+                    start_mins = int((ev["start_hour"] - start_hours) * 60)
+                    end_hours = int(ev["end_hour"])
+                    end_mins = int((ev["end_hour"] - end_hours) * 60)
                     events_transformed.append(
                         {
                             "status": ev["status"],
-                            "start_minute": int(ev["start_hour"] * 60),
-                            "duration_minutes": int(
-                                (ev["end_hour"] - ev["start_hour"]) * 60
+                            "start_time": f"{start_hours:02d}:{start_mins:02d}",
+                            "end_time": f"{end_hours:02d}:{end_mins:02d}",
+                            "duration_hours": round(
+                                ev["end_hour"] - ev["start_hour"], 2
                             ),
                             "label": ev["label"],
                         }

@@ -31,6 +31,13 @@ python manage.py runserver
 API available at `http://localhost:8000`  
 Swagger UI: `http://localhost:8000/api/docs/`
 
+### Docker Compose Local Development
+```bash
+docker compose up --build
+```
+
+The backend runs at `http://localhost:8000`, the health check is at `http://localhost:8000/health/`, and PostgreSQL/Redis run as sibling services inside the Compose network.
+
 ## Technology Stack
 
 - **Framework:** Django 4.2 + Django REST Framework 3.15.1
@@ -43,6 +50,7 @@ Swagger UI: `http://localhost:8000/api/docs/`
 
 - **Getting Started**
   - [Local Development Setup](docs/LOCAL_DEVELOPMENT.md) — Backend + frontend setup
+  - [PR Review Checklist](docs/PR_REVIEW_CHECKLIST.md) — Reviewer guidance for new pull requests
   - [API Contract](docs/API_CONTRACT.md) — Request/response schemas
   - [Deployment Strategy](../DEVOPS_STRATEGY.md) — Production setup
 

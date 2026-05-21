@@ -6,6 +6,10 @@
 
 Complete step-by-step guide to run the full Spotter ELD stack locally (backend + frontend) for development and testing.
 
+This guide covers both the traditional Python + Node setup and the Docker Compose path for developers who want the backend services bundled together.
+
+This guide covers both the traditional Python + Node setup and the Docker Compose path for developers who want the backend services bundled together.
+
 ---
 
 ## Architecture
@@ -63,6 +67,36 @@ git clone https://github.com/fworks-tech/spotter-eld-logging-api.git
 cd spotter-eld-logging-api
 ```
 
+### Docker Compose Fast Path
+
+If Docker Desktop is running, you can start the backend stack without manually installing PostgreSQL or Redis:
+
+```bash
+docker compose up --build
+```
+
+This starts:
+- `web` on `http://localhost:8000`
+- `db` on `localhost:5432`
+- `redis` on `localhost:6379`
+
+The Compose stack uses the same `/health/` endpoint documented in the root `README.md` and is intended for local development only.
+
+### Docker Compose Fast Path
+
+If Docker Desktop is running, you can start the backend stack without manually installing PostgreSQL or Redis:
+
+```bash
+docker compose up --build
+```
+
+This starts:
+- `web` on `http://localhost:8000`
+- `db` on `localhost:5432`
+- `redis` on `localhost:6379`
+
+The Compose stack uses the same `/health/` endpoint documented in the root `README.md` and is intended for local development only.
+
 ### Step 1.2: Create Python Virtual Environment
 
 ```bash
@@ -111,6 +145,10 @@ LOG_LEVEL=INFO
 - `DEBUG=True` — Shows detailed errors in browser
 - `CORS_ALLOWED_ORIGINS=http://localhost:3000` — Allows frontend to make requests
 - `DATABASE_URL=sqlite:///` — Uses local SQLite (no PostgreSQL needed)
+
+**Docker Compose note:** when running `docker compose up --build`, the container injects PostgreSQL and Redis connection strings automatically. You only need custom values if you are overriding the default Compose setup.
+
+**Docker Compose note:** when running `docker compose up --build`, the container injects PostgreSQL and Redis connection strings automatically. You only need custom values if you are overriding the default Compose setup.
 
 ### Step 1.5: Run Migrations (Optional)
 
@@ -241,6 +279,90 @@ May 20, 2026 - 14:35:42 [INFO] Starting development server at http://0.0.0.0:800
 ```
 
 **Browser:** http://localhost:3000/ open and visible
+
+---
+
+## Troubleshooting
+
+### Docker Desktop is not running
+
+If `docker compose up --build` fails with a `dockerDesktopLinuxEngine` pipe error on Windows, start Docker Desktop first and make sure the Linux engine is active.
+
+```bash
+docker version
+docker compose up --build
+```
+
+### Port conflicts
+
+If ports `8000`, `5432`, or `6379` are already in use, stop the conflicting service or update the Compose port mappings before retrying.
+
+### Stale containers or volumes
+
+If the database container gets into a bad state, remove the Compose stack and its volume, then start again:
+
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+### Missing `.env`
+
+If Django starts but the backend behavior is inconsistent, confirm that `.env` exists and that it still matches `.env.example`. The Compose file loads `.env` from the project root.
+
+### Windows file sharing or WSL2 issues
+
+If Compose cannot mount the project directory, verify that Docker Desktop has access to the `C:\Github\spotter-eld-logging-api` folder and that WSL2 integration is enabled.
+
+### Health endpoint check
+
+Once the backend is up, this should return `{"status": "ok"}`:
+
+```bash
+curl http://localhost:8000/health/
+```
+
+---
+
+## Troubleshooting
+
+### Docker Desktop is not running
+
+If `docker compose up --build` fails with a `dockerDesktopLinuxEngine` pipe error on Windows, start Docker Desktop first and make sure the Linux engine is active.
+
+```bash
+docker version
+docker compose up --build
+```
+
+### Port conflicts
+
+If ports `8000`, `5432`, or `6379` are already in use, stop the conflicting service or update the Compose port mappings before retrying.
+
+### Stale containers or volumes
+
+If the database container gets into a bad state, remove the Compose stack and its volume, then start again:
+
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+### Missing `.env`
+
+If Django starts but the backend behavior is inconsistent, confirm that `.env` exists and that it still matches `.env.example`. The Compose file loads `.env` from the project root.
+
+### Windows file sharing or WSL2 issues
+
+If Compose cannot mount the project directory, verify that Docker Desktop has access to the `C:\Github\spotter-eld-logging-api` folder and that WSL2 integration is enabled.
+
+### Health endpoint check
+
+Once the backend is up, this should return `{"status": "ok"}`:
+
+```bash
+curl http://localhost:8000/health/
+```
 
 ### Step 3.2: Fill Trip Planning Form
 

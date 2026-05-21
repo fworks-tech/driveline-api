@@ -11,9 +11,10 @@ Validates that:
 
 import json
 import sys
-import yaml
 from pathlib import Path
 from typing import Any, Dict, List, Set, Tuple
+
+import yaml
 
 
 class OpenAPIValidator:
