@@ -3,7 +3,22 @@
     "allow": [
       "PowerShell(& \".\\\\venv\\\\Scripts\\\\Activate.ps1\")",
       "PowerShell(pip install black isort)",
-      "PowerShell(pytest trips/tests/ -v --cov=trips --cov-report=html)"
+      "PowerShell(pytest trips/tests/ -v --cov=trips --cov-report=html)",
+      "Bash(Start-Sleep -Seconds 5)",
+      "PowerShell(gh run list --repo fworks-tech/spotter-eld-logging-api --branch feat/issue-17-docker-compose-clean --limit 5)",
+      "Bash(rm -rf .claude/settings.json && git rebase origin/main)",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\Github\\\\spotter-eld-logging-api\" -Depth 2 | Where-Object { $_.PSIsContainer } | Select-Object FullName | Head -20)",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\Github\\\\spotter-eld-logging-api\" -Directory | Where-Object { $_.Name -notmatch \"^venv|\\\\.git|\\\\.tox|__pycache__|\\\\.pytest\" })",
+      "Bash(cat)",
+      "Read(//tmp/**)",
+      "Bash(python -m pytest trips/tests/test_response_structure.py -v --tb=short)",
+      "Bash(python -m pytest trips/tests/test_response_structure.py::TestResponseStructure::test_route_coordinates_use_geojson_format -xvs)",
+      "Bash(python -m pytest trips/tests/ -v --cov=trips --cov-report=term-missing)",
+      "Bash(python -m pytest \"c:\\\\Github\\\\spotter-eld-logging-api\\\\trips\\\\tests\" -v --cov=\"c:\\\\Github\\\\spotter-eld-logging-api\\\\trips\" --cov-report=term-missing)",
+      "Bash(python -m pytest \"c:\\\\Github\\\\spotter-eld-logging-api\\\\trips\\\\tests\\\\test_response_structure.py::TestResponseStructure::test_route_coordinates_use_geojson_format\" -xvs)"
+    ],
+    "additionalDirectories": [
+      "C:\\Github\\spotter-eld-logging-api\\.claude"
     ]
   }
 }

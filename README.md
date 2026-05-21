@@ -11,37 +11,31 @@ Production-ready Django REST Framework API for the Spotter AI ELD & Route Planne
 ## Quick Start
 
 ### Prerequisites
-- Python 3.11+
-- PostgreSQL (production) or SQLite (development)
+- Docker Desktop or Docker Engine with the Compose plugin
+- Node.js 18+ only if you also want to run the frontend
 
-### Installation
+### Backend Setup
+```powershell
+.\scripts\bootstrap_backend.ps1
+```
+
+This copies `.env.example` to `.env` if needed, builds the image, runs migrations, and starts PostgreSQL, Redis, and the Django API.
+
+If you prefer the raw compose command:
+
 ```bash
-git clone https://github.com/fworks-tech/spotter-eld-logging-api.git
-cd spotter-eld-logging-api
-
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-pip install -r requirements.txt
-cp .env.example .env
-python manage.py migrate
-python manage.py runserver
+docker compose up --build
 ```
 
 API available at `http://localhost:8000`  
 Swagger UI: `http://localhost:8000/api/docs/`
-
-### Docker Compose Local Development
-```bash
-docker compose up --build
-```
 
 The backend runs at `http://localhost:8000`, the health check is at `http://localhost:8000/health/`, and PostgreSQL/Redis run as sibling services inside the Compose network.
 
 ## Technology Stack
 
 - **Framework:** Django 4.2 + Django REST Framework 3.15.1
-- **Database:** PostgreSQL (production) / SQLite (development)
+- **Database:** PostgreSQL via Docker Compose for local development
 - **APIs:** Nominatim (geocoding) + OSRM (routing)
 - **Testing:** pytest with 87% coverage
 - **Deployment:** Railway + Gunicorn

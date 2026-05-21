@@ -41,6 +41,56 @@ servers:
     description: Staging API
 
 paths:
+  /api/health/:
+    get:
+      tags:
+        - Health
+      summary: API health check
+      operationId: health_api
+      responses:
+        "200":
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /health/:
+    get:
+      tags:
+        - Health
+      summary: API health check
+      operationId: health_endpoint
+      responses:
+        "200":
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /api/schema/:
+    get:
+      tags:
+        - Utilities
+      summary: Get OpenAPI schema
+      operationId: schema_retrieve
+      responses:
+        "200":
+          description: OpenAPI schema in JSON format
+          content:
+            application/json:
+              schema:
+                type: object
+
   /api/plan-route/:
     post:
       tags:
@@ -135,37 +185,57 @@ paths:
                         label: "Rest Break (10-hr)"
                     logbook_days:
                       - day: 1
+                        date_offset: 1
+                        total_driving_hours: 11.0
+                        total_on_duty_hours: 12.0
                         events:
                           - status: DRIVING
-                            start_minute: 0
-                            duration_minutes: 660
-                            label: "Driving"
+                            start_time: "00:00"
+                            end_time: "11:00"
+                            duration_hours: 11.0
+                            label: "Driving to Pickup"
+                            location: ""
                           - status: ON_DUTY_ND
-                            start_minute: 660
-                            duration_minutes: 60
-                            label: "On-duty (Pickup)"
-                          - status: DRIVING
-                            start_minute: 720
-                            duration_minutes: 300
-                            label: "Driving"
+                            start_time: "11:00"
+                            end_time: "12:00"
+                            duration_hours: 1.0
+                            label: "Pickup"
+                            location: "Pickup Location"
                           - status: OFF_DUTY
-                            start_minute: 1020
-                            duration_minutes: 420
-                            label: "Off-duty (Rest)"
+                            start_time: "12:00"
+                            end_time: "24:00"
+                            duration_hours: 12.0
+                            label: "Off Duty"
+                            location: ""
                       - day: 2
+                        date_offset: 2
+                        total_driving_hours: 0.5
+                        total_on_duty_hours: 1.5
                         events:
                           - status: OFF_DUTY
-                            start_minute: 0
-                            duration_minutes: 600
-                            label: "Off-duty (Rest)"
+                            start_time: "00:00"
+                            end_time: "10:00"
+                            duration_hours: 10.0
+                            label: "Off Duty"
+                            location: ""
+                          - status: DRIVING
+                            start_time: "10:00"
+                            end_time: "10:30"
+                            duration_hours: 0.5
+                            label: "Driving to Dropoff"
+                            location: ""
                           - status: ON_DUTY_ND
-                            start_minute: 600
-                            duration_minutes: 60
-                            label: "On-duty (Dropoff)"
+                            start_time: "10:30"
+                            end_time: "11:30"
+                            duration_hours: 1.0
+                            label: "Dropoff"
+                            location: "Dropoff Location"
                           - status: OFF_DUTY
-                            start_minute: 660
-                            duration_minutes: 780
-                            label: "Off-duty (Remaining)"
+                            start_time: "11:30"
+                            end_time: "24:00"
+                            duration_hours: 12.5
+                            label: "Off Duty"
+                            location: ""
                     trip_summary:
                       total_distance_miles: 850.5
                       total_trip_hours: 13.5
@@ -336,12 +406,29 @@ components:
       type: object
       required:
         - day
+        - date_offset
+        - total_driving_hours
+        - total_on_duty_hours
         - events
       properties:
         day:
           type: integer
-          minimum: 1
-          description: Day number (1-indexed)
+          minimum: 0
+          description: Day number (0-indexed)
+        date_offset:
+          type: integer
+          minimum: 0
+          description: Day offset from trip start (0 = first day)
+        total_driving_hours:
+          type: number
+          format: float
+          minimum: 0
+          description: Total driving hours for this day
+        total_on_duty_hours:
+          type: number
+          format: float
+          minimum: 0
+          description: Total on-duty hours for this day
         events:
           type: array
           items:
@@ -352,8 +439,10 @@ components:
       type: object
       required:
         - status
-        - start_minute
-        - duration_minutes
+        - start_time
+        - end_time
+        - duration_hours
+        - label
       properties:
         status:
           type: string
@@ -370,18 +459,33 @@ components:
             - SLEEPER_BERTH: Mandatory 10-hour rest reset in sleeper berth
             - DRIVING: Actively driving vehicle
             - ON_DUTY_ND: On-duty but not driving (pickup, fuel, rest breaks)
-        start_minute:
-          type: integer
+        start_time:
+          type: string
+          pattern: "^([0-1][0-9]|2[0-3]):[0-5][0-9]$"
+          description: Start time in HH:MM format (24-hour)
+          examples:
+            - "00:00"
+            - "11:30"
+            - "23:59"
+        end_time:
+          type: string
+          pattern: "^([0-1][0-9]|2[0-3]):[0-5][0-9]$"
+          description: End time in HH:MM format (24-hour)
+          examples:
+            - "01:30"
+            - "12:00"
+            - "23:59"
+        duration_hours:
+          type: number
+          format: float
           minimum: 0
-          maximum: 1440
-          description: Start time in minutes since midnight (0-1440)
-        duration_minutes:
-          type: integer
-          minimum: 1
-          description: Duration in minutes
+          description: Duration in hours
         label:
           type: string
           description: Human-readable label (e.g., "Driving to Pickup" or "30-min Break")
+        location:
+          type: string
+          description: Location name (optional, for pickup/dropoff/fuel stops)
 
     TripSummary:
       type: object

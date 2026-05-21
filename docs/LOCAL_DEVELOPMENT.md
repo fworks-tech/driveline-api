@@ -6,9 +6,7 @@
 
 Complete step-by-step guide to run the full Spotter ELD stack locally (backend + frontend) for development and testing.
 
-This guide covers both the traditional Python + Node setup and the Docker Compose path for developers who want the backend services bundled together.
-
-This guide covers both the traditional Python + Node setup and the Docker Compose path for developers who want the backend services bundled together.
+This guide is Docker Compose-first for the backend. Use the bootstrap script below to build and start the full backend stack with one command.
 
 ---
 
@@ -41,16 +39,17 @@ Your Development Machine
 
 ### System Requirements
 
-- **Python 3.11+** (for Django backend)
-- **Node.js 18+** (for React frontend)
-- **npm** or **yarn** (package manager)
+- **Docker Desktop** or **Docker Engine + Compose plugin**
+- **Node.js 18+** (only if you also want to run the frontend)
+- **npm** or **yarn** (frontend package manager)
 - **Git** (for cloning repos)
 - **Internet connection** (for external APIs: Nominatim, OSRM)
 
 ### Verify Installation
 
 ```bash
-python --version      # Should be 3.11+
+docker --version      # Should be installed and available
+docker compose version
 node --version        # Should be 18+
 npm --version         # Should be 9+
 git --version         # Should be 2.30+
@@ -67,123 +66,29 @@ git clone https://github.com/fworks-tech/spotter-eld-logging-api.git
 cd spotter-eld-logging-api
 ```
 
-### Docker Compose Fast Path
+### Step 1.2: Bootstrap the Backend Stack
 
-If Docker Desktop is running, you can start the backend stack without manually installing PostgreSQL or Redis:
+Run the PowerShell helper script from the repository root:
+
+```powershell
+.\scripts\bootstrap_backend.ps1
+```
+
+What it does:
+- Creates `.env` from `.env.example` if it is missing
+- Builds the backend image
+- Runs Django migrations inside the Compose stack
+- Starts `web`, `db`, and `redis`
+
+If you prefer the raw compose command, run:
 
 ```bash
 docker compose up --build
 ```
 
-This starts:
-- `web` on `http://localhost:8000`
-- `db` on `localhost:5432`
-- `redis` on `localhost:6379`
+The backend will be available at `http://localhost:8000`, and the health check is at `http://localhost:8000/health/`.
 
-The Compose stack uses the same `/health/` endpoint documented in the root `README.md` and is intended for local development only.
-
-### Docker Compose Fast Path
-
-If Docker Desktop is running, you can start the backend stack without manually installing PostgreSQL or Redis:
-
-```bash
-docker compose up --build
-```
-
-This starts:
-- `web` on `http://localhost:8000`
-- `db` on `localhost:5432`
-- `redis` on `localhost:6379`
-
-The Compose stack uses the same `/health/` endpoint documented in the root `README.md` and is intended for local development only.
-
-### Step 1.2: Create Python Virtual Environment
-
-```bash
-# Create venv
-python -m venv venv
-
-# Activate venv (Windows)
-venv\Scripts\activate
-
-# Activate venv (macOS/Linux)
-source venv/bin/activate
-```
-
-**Expected output:** Your prompt should now show `(venv)` prefix.
-
-### Step 1.3: Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-**Expected output:**
-```
-Successfully installed django-4.2.13 djangorestframework-3.15.1 ... [N packages]
-```
-
-### Step 1.4: Configure Environment
-
-Create `.env` file in project root (copy from `.env.example`):
-
-```bash
-cp .env.example .env
-```
-
-**File: `.env`** (verify these settings)
-
-```env
-DEBUG=True
-DJANGO_SECRET_KEY=dev-secret-key-change-in-production
-DATABASE_URL=sqlite:///db.sqlite3
-CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
-LOG_LEVEL=INFO
-```
-
-**Key settings:**
-- `DEBUG=True` — Shows detailed errors in browser
-- `CORS_ALLOWED_ORIGINS=http://localhost:3000` — Allows frontend to make requests
-- `DATABASE_URL=sqlite:///` — Uses local SQLite (no PostgreSQL needed)
-
-**Docker Compose note:** when running `docker compose up --build`, the container injects PostgreSQL and Redis connection strings automatically. You only need custom values if you are overriding the default Compose setup.
-
-**Docker Compose note:** when running `docker compose up --build`, the container injects PostgreSQL and Redis connection strings automatically. You only need custom values if you are overriding the default Compose setup.
-
-### Step 1.5: Run Migrations (Optional)
-
-```bash
-python manage.py migrate
-```
-
-**Expected output:**
-```
-Operations to perform:
-  Apply all migrations: auth, contenttypes, sessions
-Running migrations:
-  Applying contenttypes.0001_initial... OK
-  Applying auth.0001_initial... OK
-  ...
-```
-
-**Note:** No custom models exist in alpha, so this just sets up Django's built-in tables.
-
-### Step 1.6: Start Backend Server
-
-```bash
-python manage.py runserver 0.0.0.0:8000
-```
-
-**Expected output:**
-```
-Watching for file changes with StatReloader
-Performing system checks...
-System check identified no issues (0 silenced).
-May 20, 2026 - 14:35:42 [INFO] Starting development server at http://0.0.0.0:8000/
-May 20, 2026 - 14:35:42 [INFO] Quit the server with CTRL+BREAK.
-```
-
-### Step 1.7: Verify Backend is Running
+### Step 1.3: Verify Backend is Running
 
 Open in browser: **http://localhost:8000/api/docs/**
 
@@ -423,12 +328,10 @@ lsof -ti :8000 | xargs kill -9
 
 **Solution B:** Use different port
 ```bash
-python manage.py runserver 8001
+docker compose down
+docker compose up --build
 ```
-Then update `.env.local` in frontend:
-```env
-VITE_API_URL=http://localhost:8001
-```
+If you changed the host port in `docker-compose.yml`, update `frontend/.env.local` to match.
 
 ### Frontend: "CORS error: Access to XMLHttpRequest blocked"
 
@@ -620,21 +523,6 @@ Use this to confirm everything is working:
 
 ---
 
-## Common Commands Reference
-
-```bash
-# Backend
-cd spotter-eld-logging-api
-venv\Scripts\activate              # Activate virtual environment
-python manage.py runserver         # Start dev server
-python manage.py migrate           # Run migrations
-python -m pytest trips/tests/ -v   # Run tests
-
-# Frontend
-cd spotter-eld-logging-app/frontend
-npm install                        # Install dependencies
-npm run dev                        # Start dev server
-npm test                           # Run tests
 npm run build                      # Build for production
 npm run preview                    # Preview production build
 ```
