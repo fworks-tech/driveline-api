@@ -17,8 +17,9 @@ class MarkerSerializer(serializers.Serializer):
 
 class LogbookEventSerializer(serializers.Serializer):
     status = serializers.CharField(max_length=50)
-    start_minute = serializers.IntegerField()
-    duration_minutes = serializers.IntegerField()
+    start_time = serializers.CharField(max_length=5)
+    end_time = serializers.CharField(max_length=5)
+    duration_hours = serializers.FloatField()
     label = serializers.CharField(max_length=255)
 
 
