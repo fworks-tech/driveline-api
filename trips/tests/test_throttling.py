@@ -10,7 +10,7 @@ class TestPlanRouteThrottling(TestCase):
     def setUp(self):
         """Initialize test client and clear cache."""
         self.client = Client()
-        self.endpoint = "/api/v1/plan-route/"
+        self.endpoint = "/api/plan-route/"
         cache.clear()
 
     def test_plan_route_allows_60_requests_per_minute(self):
@@ -85,8 +85,8 @@ class TestAuthThrottling(TestCase):
     def setUp(self):
         """Initialize test client and clear cache."""
         self.client = Client()
-        self.token_endpoint = "/api/v1/auth/token/"
-        self.register_endpoint = "/api/v1/auth/register/"
+        self.token_endpoint = "/api/auth/token/"
+        self.register_endpoint = "/api/auth/register/"
         cache.clear()
 
     def test_token_endpoint_throttle_configured(self):

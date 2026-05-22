@@ -24,7 +24,7 @@ class HealthCheckView(APIView):
 
 class PlanRouteView(APIView):
     """
-    POST /api/v1/plan-route/
+    POST /api/plan-route/
 
     Accepts trip details, geocodes locations, fetches route from OSRM,
     runs HOS simulation, and returns full trip data.
@@ -257,7 +257,7 @@ def _build_stop_markers(
 
 class TokenObtainView(APIView):
     """
-    POST /api/v1/auth/token/
+    POST /api/auth/token/
 
     Obtain JWT tokens using username and password.
     Stateless JWT auth: no session cookies, CSRF protection not applicable.
@@ -301,7 +301,7 @@ class TokenObtainView(APIView):
 
 class UserRegistrationView(APIView):
     """
-    POST /api/v1/auth/register/
+    POST /api/auth/register/
 
     Register a new user account.
     Stateless JWT auth: no session cookies, CSRF protection not applicable.
