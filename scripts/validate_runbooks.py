@@ -13,7 +13,6 @@ Usage:
     python scripts/validate_runbooks.py docs/LOCAL_DEVELOPMENT.md  # Validate specific file
 """
 
-import os
 import re
 import sys
 from pathlib import Path
@@ -221,11 +220,9 @@ def main():
 
     validator = RunbookValidator(repo_root)
 
-    all_valid = True
     for filepath in target_files:
         print(f"Checking: {filepath.relative_to(repo_root)}")
-        if not validator.validate_file(filepath):
-            all_valid = False
+        validator.validate_file(filepath)
 
     exit_code = validator.report()
     return exit_code
