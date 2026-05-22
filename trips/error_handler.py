@@ -75,7 +75,7 @@ def with_retry(config: Optional[RetryConfig] = None) -> Callable:
                     raise
                 except ValueError:
                     raise
-                except requests.exceptions.ConnectionError as e:
+                except (ConnectionError, requests.exceptions.ConnectionError) as e:
                     last_exception = e
                     if attempt < config.max_retries:
                         delay = min(config.base_delay * (2**attempt), config.max_delay)
