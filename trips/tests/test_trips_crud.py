@@ -469,3 +469,111 @@ class TestTripPermissions(TestCase):
             HTTP_AUTHORIZATION=f"Bearer {self.access_token2}",
         )
         self.assertEqual(response.status_code, 404)
+
+
+class TestELDMetadataFields(TestCase):
+    """Tests for ELD log header metadata fields (trip_date, tractor, trailer, shipper)."""
+
+    def setUp(self):
+        self.client = Client()
+        self.endpoint = "/api/trips/"
+        self.user = User.objects.create_user(username="driver", password="testpass123")
+        self.refresh = RefreshToken.for_user(self.user)
+        self.access_token = str(self.refresh.access_token)
+
+    def test_create_with_all_metadata_fields(self):
+        """Test creating a trip with all optional metadata fields populated."""
+        payload = {
+            "current_location": "Chicago, IL",
+            "pickup_location": "Denver, CO",
+            "dropoff_location": "Los Angeles, CA",
+            "cycle_hours_used": 20,
+            "trip_date": "2026-05-22",
+            "tractor_number": "TRAC-001",
+            "trailer_number": "TRAIL-002",
+            "shipper_name": "Acme Corp",
+        }
+        response = self.client.post(
+            self.endpoint,
+            data=json.dumps(payload),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {self.access_token}",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        trip = Trip.objects.get(current_location="Chicago, IL")
+        self.assertEqual(str(trip.trip_date), "2026-05-22")
+        self.assertEqual(trip.tractor_number, "TRAC-001")
+        self.assertEqual(trip.trailer_number, "TRAIL-002")
+        self.assertEqual(trip.shipper_name, "Acme Corp")
+
+    def test_create_without_metadata_fields(self):
+        """Test that metadata fields are optional - trip can be created without them."""
+        payload = {
+            "current_location": "Chicago, IL",
+            "pickup_location": "Denver, CO",
+            "dropoff_location": "Los Angeles, CA",
+            "cycle_hours_used": 20,
+        }
+        response = self.client.post(
+            self.endpoint,
+            data=json.dumps(payload),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {self.access_token}",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        trip = Trip.objects.get(current_location="Chicago, IL")
+        self.assertIsNotNone(trip.trip_date)  # Should default to today
+        self.assertEqual(trip.tractor_number, "")
+        self.assertEqual(trip.trailer_number, "")
+        self.assertEqual(trip.shipper_name, "")
+
+    def test_create_with_partial_metadata(self):
+        """Test creating a trip with some metadata fields populated."""
+        payload = {
+            "current_location": "Chicago, IL",
+            "pickup_location": "Denver, CO",
+            "dropoff_location": "Los Angeles, CA",
+            "cycle_hours_used": 20,
+            "tractor_number": "TRAC-001",
+            "shipper_name": "Acme Corp",
+        }
+        response = self.client.post(
+            self.endpoint,
+            data=json.dumps(payload),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {self.access_token}",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        trip = Trip.objects.get(current_location="Chicago, IL")
+        self.assertEqual(trip.tractor_number, "TRAC-001")
+        self.assertEqual(trip.trailer_number, "")
+        self.assertEqual(trip.shipper_name, "Acme Corp")
+
+    def test_metadata_fields_in_response(self):
+        """Test that metadata fields are returned in the API response."""
+        payload = {
+            "current_location": "Chicago, IL",
+            "pickup_location": "Denver, CO",
+            "dropoff_location": "Los Angeles, CA",
+            "cycle_hours_used": 20,
+            "trip_date": "2026-05-22",
+            "tractor_number": "TRAC-001",
+            "trailer_number": "TRAIL-002",
+            "shipper_name": "Acme Corp",
+        }
+        response = self.client.post(
+            self.endpoint,
+            data=json.dumps(payload),
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {self.access_token}",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        data = response.json()
+        self.assertEqual(data["trip_date"], "2026-05-22")
+        self.assertEqual(data["tractor_number"], "TRAC-001")
+        self.assertEqual(data["trailer_number"], "TRAIL-002")
+        self.assertEqual(data["shipper_name"], "Acme Corp")

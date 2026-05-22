@@ -16,7 +16,8 @@
       "Bash(python -m pytest trips/tests/ -v --cov=trips --cov-report=term-missing)",
       "Bash(python -m pytest \"c:\\\\Github\\\\spotter-eld-logging-api\\\\trips\\\\tests\" -v --cov=\"c:\\\\Github\\\\spotter-eld-logging-api\\\\trips\" --cov-report=term-missing)",
       "Bash(python -m pytest \"c:\\\\Github\\\\spotter-eld-logging-api\\\\trips\\\\tests\\\\test_response_structure.py::TestResponseStructure::test_route_coordinates_use_geojson_format\" -xvs)",
-      "Bash(bash scripts/generate-api-client.sh*)"
+      "Bash(bash scripts/generate-api-client.sh*)",
+      "Bash(python manage.py makemigrations trips)"
     ],
     "additionalDirectories": [
       "C:\\Github\\spotter-eld-logging-api\\.claude"
