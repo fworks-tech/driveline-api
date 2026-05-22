@@ -9,7 +9,7 @@ class TripInputSerializer(serializers.Serializer):
     current_location = serializers.CharField(min_length=2, max_length=500)
     pickup_location = serializers.CharField(min_length=2, max_length=500)
     dropoff_location = serializers.CharField(min_length=2, max_length=500)
-    cycle_hours_used = serializers.FloatField(min_value=0, max_value=70)
+    cycle_hours_used = serializers.FloatField(min_value=0, max_value=69.5)
     trip_date = serializers.DateField(required=False, allow_null=True)
     tractor_number = serializers.CharField(
         max_length=50, required=False, allow_blank=True, default=""
@@ -157,7 +157,7 @@ class TripCreateSerializer(serializers.Serializer):
     current_location = serializers.CharField(min_length=2, max_length=500)
     pickup_location = serializers.CharField(min_length=2, max_length=500)
     dropoff_location = serializers.CharField(min_length=2, max_length=500)
-    cycle_hours_used = serializers.FloatField(min_value=0, max_value=70)
+    cycle_hours_used = serializers.FloatField(min_value=0, max_value=69.5)
     trip_date = serializers.DateField(required=False, allow_null=True)
     tractor_number = serializers.CharField(
         max_length=50, required=False, allow_blank=True, default=""
