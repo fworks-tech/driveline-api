@@ -129,7 +129,7 @@ TOTAL                   139     17    87%   Excellent
 
 ## API Endpoint Validation
 
-### POST /api/v1/plan-route/ — Comprehensive Testing
+### POST /api/plan-route/ — Comprehensive Testing
 
 #### Request Validation
 - ✅ Valid request with all fields → 200 OK

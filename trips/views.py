@@ -1,16 +1,23 @@
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
 from drf_spectacular.utils import extend_schema
 from requests.exceptions import RequestException, Timeout
-from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework import status, viewsets
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .error_handler import CircuitOpenError, GeocodingError, RoutingError
 from .hos_engine import simulate_trip
+from .models import Trip
 from .routing import geocode, get_route
-from .serializers import TripInputSerializer, TripOutputSerializer
+from .serializers import (
+    HealthCheckSerializer,
+    TripCreateSerializer,
+    TripInputSerializer,
+    TripListSerializer,
+    TripOutputSerializer,
+    TripSerializer,
+)
+from .throttles import AuthThrottle, PlanRouteThrottle
 
 
 class HealthCheckView(APIView):
@@ -18,6 +25,7 @@ class HealthCheckView(APIView):
 
     authentication_classes = []
     permission_classes = []
+    serializer_class = HealthCheckSerializer
 
     def get(self, request):
         return Response({"status": "ok"}, status=status.HTTP_200_OK)
@@ -25,7 +33,7 @@ class HealthCheckView(APIView):
 
 class PlanRouteView(APIView):
     """
-    POST /api/v1/plan-route/
+    POST /api/plan-route/
 
     Accepts trip details, geocodes locations, fetches route from OSRM,
     runs HOS simulation, and returns full trip data.
@@ -35,6 +43,7 @@ class PlanRouteView(APIView):
 
     serializer_class = TripInputSerializer
     permission_classes = [AllowAny]
+    throttle_classes = [PlanRouteThrottle]
 
     @extend_schema(
         request=TripInputSerializer,
@@ -184,10 +193,11 @@ class PlanRouteView(APIView):
                 },
                 status=status.HTTP_502_BAD_GATEWAY,
             )
-        except ValueError as exc:
+        except ValueError:
             return Response(
                 {
-                    "error": str(exc),
+                    "error": "invalid_input",
+                    "detail": "Request validation failed. Please check your input.",
                     "request_id": getattr(request, "request_id", None),
                 },
                 status=status.HTTP_400_BAD_REQUEST,
@@ -201,20 +211,20 @@ class PlanRouteView(APIView):
                 },
                 status=status.HTTP_504_GATEWAY_TIMEOUT,
             )
-        except RequestException as exc:
+        except RequestException:
             return Response(
                 {
                     "error": "upstream_error",
-                    "detail": f"External API error: {str(exc)}. Please try again later.",
+                    "detail": "External service error. Please try again later.",
                     "request_id": getattr(request, "request_id", None),
                 },
                 status=status.HTTP_502_BAD_GATEWAY,
             )
-        except Exception as exc:
+        except Exception:
             return Response(
                 {
                     "error": "internal_error",
-                    "detail": f"An unexpected error occurred: {str(exc)}",
+                    "detail": "An unexpected error occurred. Please try again later.",
                     "request_id": getattr(request, "request_id", None),
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -270,16 +280,17 @@ def _build_stop_markers(
     return markers
 
 
-@method_decorator(csrf_exempt, name="dispatch")
 class TokenObtainView(APIView):
     """
-    POST /api/v1/auth/token/
+    POST /api/auth/token/
 
     Obtain JWT tokens using username and password.
+    Stateless JWT auth: no session cookies, CSRF protection not applicable.
     """
 
     authentication_classes = []
     permission_classes = [AllowAny]
+    throttle_classes = [AuthThrottle]
 
     @extend_schema(
         description="Obtain JWT access and refresh tokens",
@@ -308,21 +319,22 @@ class TokenObtainView(APIView):
 
         serializer = CustomTokenObtainPairSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
 
-@method_decorator(csrf_exempt, name="dispatch")
 class UserRegistrationView(APIView):
     """
-    POST /api/v1/auth/register/
+    POST /api/auth/register/
 
     Register a new user account.
+    Stateless JWT auth: no session cookies, CSRF protection not applicable.
     """
 
     authentication_classes = []
     permission_classes = [AllowAny]
+    throttle_classes = [AuthThrottle]
 
     @extend_schema(
         description="Register a new user account",
@@ -364,3 +376,47 @@ class UserRegistrationView(APIView):
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+class TripViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for CRUD operations on user trips.
+
+    Endpoints:
+    - GET /api/trips/ - List user's trips (paginated)
+    - POST /api/trips/ - Create new trip
+    - GET /api/trips/{id}/ - Retrieve trip
+    - PUT /api/trips/{id}/ - Update trip
+    - DELETE /api/trips/{id}/ - Delete trip
+    """
+
+    permission_classes = [IsAuthenticated]
+    queryset = Trip.objects.all()
+    serializer_class = TripSerializer
+
+    def get_queryset(self):
+        """Return only trips owned by the current user."""
+        return Trip.objects.filter(user=self.request.user)
+
+    def get_serializer_class(self):
+        """Use different serializers for different actions."""
+        if self.action == "create":
+            return TripCreateSerializer
+        elif self.action == "list":
+            return TripListSerializer
+        return TripSerializer
+
+    def create(self, request, *args, **kwargs):
+        """Create a new trip from form input and return full trip data."""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        trip = serializer.save()
+
+        # Return full trip data in response
+        output_serializer = TripSerializer(trip, context={"request": request})
+        return Response(output_serializer.data, status=status.HTTP_201_CREATED)
+
+    def perform_destroy(self, instance):
+        """Soft-delete by archiving trip (can be changed to hard delete)."""
+        instance.status = "archived"
+        instance.save()

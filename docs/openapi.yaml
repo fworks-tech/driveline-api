@@ -4,6 +4,109 @@ info:
   version: 1.0.0
   description: Production REST API for trip planning with FMCSA HOS compliance.
 paths:
+  /api/auth/register/:
+    post:
+      operationId: auth_register_create
+      description: Register a new user account
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+              required:
+              - username
+              - email
+              - password
+      security:
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  username:
+                    type: string
+                  email:
+                    type: string
+          description: ''
+  /api/auth/token/:
+    post:
+      operationId: auth_token_create
+      description: Obtain JWT access and refresh tokens
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+              - username
+              - password
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access:
+                    type: string
+                    description: JWT access token
+                  refresh:
+                    type: string
+                    description: JWT refresh token
+          description: ''
+  /api/plan-route/:
+    post:
+      operationId: plan_route_create
+      description: |-
+        POST /api/plan-route/
+
+        Accepts trip details, geocodes locations, fetches route from OSRM,
+        runs HOS simulation, and returns full trip data.
+
+        Authentication is optional - allows both authenticated and public requests.
+      tags:
+      - plan-route
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TripInput'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripOutput'
+          description: ''
   /api/schema/:
     get:
       operationId: schema_retrieve
@@ -148,118 +251,175 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
-  /api/v1/auth/register/:
-    post:
-      operationId: v1_auth_register_create
-      description: Register a new user account
+  /api/trips/:
+    get:
+      operationId: trips_list
+      description: |-
+        ViewSet for CRUD operations on user trips.
+
+        Endpoints:
+        - GET /api/trips/ - List user's trips (paginated)
+        - POST /api/trips/ - Create new trip
+        - GET /api/trips/{id}/ - Retrieve trip
+        - PUT /api/trips/{id}/ - Update trip
+        - DELETE /api/trips/{id}/ - Delete trip
       tags:
-      - v1
+      - trips
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TripList'
+          description: ''
+    post:
+      operationId: trips_create
+      description: Create a new trip from form input and return full trip data.
+      tags:
+      - trips
       requestBody:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                username:
-                  type: string
-                email:
-                  type: string
-                  format: email
-                password:
-                  type: string
-                  minLength: 8
-              required:
-              - username
-              - email
-              - password
+              $ref: '#/components/schemas/TripCreate'
+        required: true
       security:
-      - {}
+      - jwtAuth: []
       responses:
         '201':
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                  username:
-                    type: string
-                  email:
-                    type: string
+                $ref: '#/components/schemas/TripCreate'
           description: ''
-  /api/v1/auth/token/:
-    post:
-      operationId: v1_auth_token_create
-      description: Obtain JWT access and refresh tokens
+  /api/trips/{id}/:
+    get:
+      operationId: trips_retrieve
+      description: |-
+        ViewSet for CRUD operations on user trips.
+
+        Endpoints:
+        - GET /api/trips/ - List user's trips (paginated)
+        - POST /api/trips/ - Create new trip
+        - GET /api/trips/{id}/ - Retrieve trip
+        - PUT /api/trips/{id}/ - Update trip
+        - DELETE /api/trips/{id}/ - Delete trip
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this trip.
+        required: true
       tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                username:
-                  type: string
-                password:
-                  type: string
-              required:
-              - username
-              - password
+      - trips
       security:
-      - {}
+      - jwtAuth: []
       responses:
         '200':
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  access:
-                    type: string
-                    description: JWT access token
-                  refresh:
-                    type: string
-                    description: JWT refresh token
+                $ref: '#/components/schemas/Trip'
           description: ''
-  /api/v1/health/:
-    get:
-      operationId: v1_health_retrieve
-      description: Simple liveness endpoint for container and deployment health checks.
-      tags:
-      - v1
-      responses:
-        '200':
-          description: No response body
-  /api/v1/plan-route/:
-    post:
-      operationId: v1_plan_route_create
+    put:
+      operationId: trips_update
       description: |-
-        POST /api/v1/plan-route/
+        ViewSet for CRUD operations on user trips.
 
-        Accepts trip details, geocodes locations, fetches route from OSRM,
-        runs HOS simulation, and returns full trip data.
-
-        Authentication is optional - allows both authenticated and public requests.
+        Endpoints:
+        - GET /api/trips/ - List user's trips (paginated)
+        - POST /api/trips/ - Create new trip
+        - GET /api/trips/{id}/ - Retrieve trip
+        - PUT /api/trips/{id}/ - Update trip
+        - DELETE /api/trips/{id}/ - Delete trip
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this trip.
+        required: true
       tags:
-      - v1
+      - trips
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TripInput'
+              $ref: '#/components/schemas/Trip'
         required: true
       security:
       - jwtAuth: []
-      - {}
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TripOutput'
+                $ref: '#/components/schemas/Trip'
           description: ''
+    patch:
+      operationId: trips_partial_update
+      description: |-
+        ViewSet for CRUD operations on user trips.
+
+        Endpoints:
+        - GET /api/trips/ - List user's trips (paginated)
+        - POST /api/trips/ - Create new trip
+        - GET /api/trips/{id}/ - Retrieve trip
+        - PUT /api/trips/{id}/ - Update trip
+        - DELETE /api/trips/{id}/ - Delete trip
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this trip.
+        required: true
+      tags:
+      - trips
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTrip'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+          description: ''
+    delete:
+      operationId: trips_destroy
+      description: |-
+        ViewSet for CRUD operations on user trips.
+
+        Endpoints:
+        - GET /api/trips/ - List user's trips (paginated)
+        - POST /api/trips/ - Create new trip
+        - GET /api/trips/{id}/ - Retrieve trip
+        - PUT /api/trips/{id}/ - Update trip
+        - DELETE /api/trips/{id}/ - Delete trip
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this trip.
+        required: true
+      tags:
+      - trips
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
   /health/:
     get:
       operationId: health_retrieve
@@ -268,9 +428,20 @@ paths:
       - health
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheck'
+          description: ''
 components:
   schemas:
+    HealthCheck:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+      - status
     LogbookDay:
       type: object
       properties:
@@ -278,20 +449,44 @@ components:
           type: integer
         date_offset:
           type: integer
+        date:
+          type: string
+          maxLength: 10
+        from_location:
+          type: string
+          maxLength: 255
+        to_location:
+          type: string
+          maxLength: 255
+        daily_miles:
+          type: number
+          format: double
+        cumulative_miles:
+          type: number
+          format: double
         total_driving_hours:
           type: number
           format: double
         total_on_duty_hours:
           type: number
           format: double
+        row_totals:
+          type: object
+          additionalProperties: {}
         events:
           type: array
           items:
             $ref: '#/components/schemas/LogbookEvent'
       required:
+      - cumulative_miles
+      - daily_miles
+      - date
       - date_offset
       - day
       - events
+      - from_location
+      - row_totals
+      - to_location
       - total_driving_hours
       - total_on_duty_hours
     LogbookEvent:
@@ -341,6 +536,166 @@ components:
       - lat
       - lon
       - type
+    PatchedTrip:
+      type: object
+      description: Serializer for Trip model with full trip data.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          type: integer
+          readOnly: true
+        current_location:
+          type: string
+          maxLength: 255
+        pickup_location:
+          type: string
+          maxLength: 255
+        dropoff_location:
+          type: string
+          maxLength: 255
+        cycle_hours_used:
+          type: number
+          format: double
+          description: Hours already used in current 70-hour cycle
+        trip_date:
+          type: string
+          format: date
+          nullable: true
+        tractor_number:
+          type: string
+          maxLength: 50
+        trailer_number:
+          type: string
+          maxLength: 50
+        shipper_name:
+          type: string
+          maxLength: 255
+        route_coordinates: {}
+        markers: {}
+        logbook_days: {}
+        trip_summary: {}
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    StatusEnum:
+      enum:
+      - draft
+      - completed
+      - archived
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `completed` - Completed
+        * `archived` - Archived
+    Trip:
+      type: object
+      description: Serializer for Trip model with full trip data.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          type: integer
+          readOnly: true
+        current_location:
+          type: string
+          maxLength: 255
+        pickup_location:
+          type: string
+          maxLength: 255
+        dropoff_location:
+          type: string
+          maxLength: 255
+        cycle_hours_used:
+          type: number
+          format: double
+          description: Hours already used in current 70-hour cycle
+        trip_date:
+          type: string
+          format: date
+          nullable: true
+        tractor_number:
+          type: string
+          maxLength: 50
+        trailer_number:
+          type: string
+          maxLength: 50
+        shipper_name:
+          type: string
+          maxLength: 255
+        route_coordinates: {}
+        markers: {}
+        logbook_days: {}
+        trip_summary: {}
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - current_location
+      - dropoff_location
+      - id
+      - pickup_location
+      - updated_at
+      - user
+    TripCreate:
+      type: object
+      description: Serializer for creating a new trip from form input.
+      properties:
+        current_location:
+          type: string
+          maxLength: 500
+          minLength: 2
+        pickup_location:
+          type: string
+          maxLength: 500
+          minLength: 2
+        dropoff_location:
+          type: string
+          maxLength: 500
+          minLength: 2
+        cycle_hours_used:
+          type: number
+          format: double
+          maximum: 70
+          minimum: 0
+        trip_date:
+          type: string
+          format: date
+          nullable: true
+        tractor_number:
+          type: string
+          default: ''
+          maxLength: 50
+        trailer_number:
+          type: string
+          default: ''
+          maxLength: 50
+        shipper_name:
+          type: string
+          default: ''
+          maxLength: 255
+      required:
+      - current_location
+      - cycle_hours_used
+      - dropoff_location
+      - pickup_location
     TripInput:
       type: object
       properties:
@@ -361,10 +716,65 @@ components:
           format: double
           maximum: 70
           minimum: 0
+        trip_date:
+          type: string
+          format: date
+          nullable: true
+        tractor_number:
+          type: string
+          default: ''
+          maxLength: 50
+        trailer_number:
+          type: string
+          default: ''
+          maxLength: 50
+        shipper_name:
+          type: string
+          default: ''
+          maxLength: 255
       required:
       - current_location
       - cycle_hours_used
       - dropoff_location
+      - pickup_location
+    TripList:
+      type: object
+      description: Lightweight serializer for trip list endpoints.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        current_location:
+          type: string
+          maxLength: 255
+        pickup_location:
+          type: string
+          maxLength: 255
+        dropoff_location:
+          type: string
+          maxLength: 255
+        cycle_hours_used:
+          type: number
+          format: double
+          description: Hours already used in current 70-hour cycle
+        trip_date:
+          type: string
+          format: date
+          nullable: true
+        tractor_number:
+          type: string
+          maxLength: 50
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - current_location
+      - dropoff_location
+      - id
       - pickup_location
     TripOutput:
       type: object
