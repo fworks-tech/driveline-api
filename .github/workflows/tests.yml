@@ -42,14 +42,20 @@ jobs:
       - name: Run Django system checks
         run: |
           python manage.py check
+        env:
+          DEBUG: 'True'
 
       - name: Run migrations
         run: |
           python manage.py migrate
+        env:
+          DEBUG: 'True'
 
       - name: Run unit tests with coverage
         run: |
           pytest trips/tests/ -v --cov=trips --cov-report=xml --cov-report=html
+        env:
+          DEBUG: 'True'
 
 
       - name: Upload coverage reports
@@ -146,6 +152,8 @@ jobs:
       - name: Generate OpenAPI schema
         run: |
           python manage.py spectacular --file docs/openapi.yaml
+        env:
+          DEBUG: 'True'
 
       - name: Validate OpenAPI schema
         run: |

@@ -24,7 +24,10 @@ _secret = os.environ.get("DJANGO_SECRET_KEY")
 if not _secret:
     if os.environ.get("DEBUG", "False") != "True":
         from django.core.exceptions import ImproperlyConfigured
-        raise ImproperlyConfigured("DJANGO_SECRET_KEY environment variable is required in production")
+
+        raise ImproperlyConfigured(
+            "DJANGO_SECRET_KEY environment variable is required in production"
+        )
     _secret = "django-insecure-spotter-eld-dev-key-change-in-production-xyz123"
 SECRET_KEY = _secret
 
@@ -129,7 +132,7 @@ CORS_ALLOWED_ORIGINS = [
     for origin in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
     if origin.strip()
 ]
-CORS_ALLOW_ALL_ORIGINS = not CORS_ALLOWED_ORIGINS
+CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_METHODS = ["GET", "POST", "OPTIONS"]
 CORS_ALLOW_HEADERS = ["content-type", "authorization"]
 
