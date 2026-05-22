@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Runbook Validator — Validates documentation runbooks for correctness.
 
@@ -118,7 +118,7 @@ class RunbookValidator:
             # FMCSA duty status enums (not env vars)
             "DRIVING",
             "OFF_DUTY",
-            "ON_DUTY_ND",
+            "ON_DUTY_NOT_DRIVING",
             "SLEEPER",
             "SLEEPER_BERTH",
             # HTTP methods (not env vars)
@@ -230,3 +230,4 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+

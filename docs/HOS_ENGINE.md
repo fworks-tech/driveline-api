@@ -1,4 +1,4 @@
-# HOS Engine Reference — FMCSA Hours of Service Simulator
+﻿# HOS Engine Reference — FMCSA Hours of Service Simulator
 
 **Source File:** `trips/hos_engine.py`  
 **Audience:** Backend developers maintaining the engine, compliance reviewers  
@@ -106,8 +106,8 @@ A driver may not work more than 70 hours in any rolling 8-day period. The cycle 
 A driver must spend at least 1 hour on-duty (not driving) at each pickup and dropoff location (loading/unloading, inspections, etc.). This is not explicitly codified by FMCSA but is a reasonable operational assumption.
 
 **Enforcement in Engine:**
-- ON_DUTY_ND event inserted at pickup location for 1 hour
-- ON_DUTY_ND event inserted at dropoff location for 1 hour
+- ON_DUTY_NOT_DRIVING event inserted at pickup location for 1 hour
+- ON_DUTY_NOT_DRIVING event inserted at dropoff location for 1 hour
 
 ### Additional Rule: Fuel Stop Every 1,000 Miles
 
@@ -118,7 +118,7 @@ A fuel stop (30 minutes on-duty) is inserted every 1,000 miles of driving.
 
 **Enforcement in Engine:**
 - `miles_since_fuel` accumulator
-- When >= 1,000 miles, 30-minute ON_DUTY_ND fuel stop inserted
+- When >= 1,000 miles, 30-minute ON_DUTY_NOT_DRIVING fuel stop inserted
 - Resets counter
 
 ---
@@ -135,11 +135,11 @@ The engine processes:
 ```
 drive_segment(leg1_miles, leg1_hours)
   ↓
-1-hour pickup duties (ON_DUTY_ND)
+1-hour pickup duties (ON_DUTY_NOT_DRIVING)
   ↓
 drive_segment(leg2_miles, leg2_hours)
   ↓
-1-hour dropoff duties (ON_DUTY_ND)
+1-hour dropoff duties (ON_DUTY_NOT_DRIVING)
 ```
 
 ### drive_segment() Loop Logic
@@ -178,7 +178,7 @@ while remaining_miles > 0:
         drive_since_break = 0
     
     if miles_since_fuel >= 1000:
-        add_event("ON_DUTY_ND", 0.5, label="Fuel Stop")
+        add_event("ON_DUTY_NOT_DRIVING", 0.5, label="Fuel Stop")
         miles_since_fuel = 0
     
     if shift_drive >= 11:
@@ -210,7 +210,7 @@ The engine emits the following status strings. Note: only a subset are actually 
 | Status | FMCSA Class | Emitted by Engine | Meaning |
 |--------|-------------|-------------------|---------|
 | `DRIVING` | Driving | ✅ Yes | Actively operating the vehicle |
-| `ON_DUTY_ND` | On-duty not driving | ✅ Yes | Pickup, dropoff, fuel stop, other on-duty non-driving |
+| `ON_DUTY_NOT_DRIVING` | On-duty not driving | ✅ Yes | Pickup, dropoff, fuel stop, other on-duty non-driving |
 | `OFF_DUTY` | Off-duty | ✅ Yes | 30-minute mandatory break after 8 hours driving |
 | `SLEEPER_BERTH` | Sleeper berth | ✅ Yes | 10-hour mandatory rest reset; after 11 hrs driving or 14-hr window |
 | `SLEEPER` | Sleeper berth | ❌ No | Reserved for future split sleeper berth (8+2 provision) |
@@ -238,7 +238,7 @@ The engine emits the following status strings. Note: only a subset are actually 
     'day': 1,                                  # 1-indexed day number
     'date_offset': 0,                          # Days since trip start (0 = first day)
     'total_driving_hours': 11.0,               # Total DRIVING time on this day
-    'total_on_duty_hours': 13.5,               # Total on-duty time (DRIVING + ON_DUTY_ND)
+    'total_on_duty_hours': 13.5,               # Total on-duty time (DRIVING + ON_DUTY_NOT_DRIVING)
     'events': [event1, event2, ...]            # Chronological list of events
 }
 ```
@@ -299,7 +299,7 @@ The engine maintains these accumulators during simulation:
 
 ### Pickup and Dropoff Duties
 
-- 1-hour ON_DUTY_ND is mandatory at each location
+- 1-hour ON_DUTY_NOT_DRIVING is mandatory at each location
 - Not configurable per location
 - May push trip over 14-hour window, forcing rest reset before dropoff duties
 
@@ -379,3 +379,4 @@ pytest trips/tests/test_hos_engine.py --cov=trips.hos_engine --cov-report=term-m
 - [Architecture](ARCHITECTURE.md) — System design and request flow
 - [API Contract](API_CONTRACT.md) — Request/response schemas and coordinate system note
 - [OpenAPI Specification](openapi.yaml) — Machine-readable schema
+

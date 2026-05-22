@@ -7,9 +7,9 @@ Rules enforced:
   - 30-minute mandatory break after 8 cumulative driving hours within a shift
   - 10-hour sleeper-berth / off-duty reset between shifts
   - 70-hour / 8-day rolling cycle limit
-  - Fuel stop (On-Duty Not Driving, 0.5 hr) every 1,000 miles
-  - 1 hour On-Duty Not Driving for pickup
-  - 1 hour On-Duty Not Driving for dropoff
+  - Fuel stop (ON_DUTY_NOT_DRIVING, 0.5 hr) every 1,000 miles
+  - 1 hour ON_DUTY_NOT_DRIVING for pickup
+  - 1 hour ON_DUTY_NOT_DRIVING for dropoff
 """
 
 from __future__ import annotations
@@ -195,7 +195,7 @@ def simulate_trip(
     def do_fuel(label: str = "Fuel Stop") -> None:
         """Insert a 30-minute on-duty fuel stop."""
         start_shift_if_needed()
-        add_event("ON_DUTY_ND", FUEL_STOP_HOURS, label, marker_type="fuel")
+        add_event("ON_DUTY_NOT_DRIVING", FUEL_STOP_HOURS, label, marker_type="fuel")
         state["shift_on_duty"] += FUEL_STOP_HOURS
         state["cycle_hours"] += FUEL_STOP_HOURS
         state["miles_since_fuel"] = 0.0
@@ -300,7 +300,7 @@ def simulate_trip(
         if remaining_window() < duration or remaining_cycle() < duration:
             do_rest()
             start_shift_if_needed()
-        add_event("ON_DUTY_ND", duration, label, location)
+        add_event("ON_DUTY_NOT_DRIVING", duration, label, location)
         state["shift_on_duty"] += duration
         state["cycle_hours"] += duration
 
@@ -369,13 +369,13 @@ def simulate_trip(
                     if (leg1_hours + leg2_hours) > 0
                     else 0
                 )
-            if ev["status"] in ("DRIVING", "ON_DUTY_ND"):
+            if ev["status"] in ("DRIVING", "ON_DUTY_NOT_DRIVING"):
                 day_on_duty += duration
             if ev["status"] == "OFF_DUTY":
                 day_off_duty += duration
             if ev["status"] == "SLEEPER_BERTH":
                 day_sleeper += duration
-            if ev["status"] == "ON_DUTY_ND":
+            if ev["status"] == "ON_DUTY_NOT_DRIVING":
                 day_on_duty_nd += duration
 
         # Fill gaps with OFF_DUTY
