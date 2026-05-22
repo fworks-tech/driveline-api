@@ -269,6 +269,38 @@ def _build_stop_markers(
     return markers
 
 
+class GeocodeSearchView(APIView):
+    """
+    GET /api/geocode/?q=<query>
+
+    Proxies geocoding requests to Nominatim so the browser avoids CORS issues.
+    """
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        import requests as req
+
+        from .routing import NOMINATIM_TIMEOUT, NOMINATIM_URL, USER_AGENT
+
+        query = request.query_params.get("q", "").strip()
+        if len(query) < 2:
+            return Response([], status=status.HTTP_200_OK)
+
+        try:
+            resp = req.get(
+                NOMINATIM_URL,
+                params={"q": query, "format": "json", "limit": 5, "countrycodes": "us"},
+                headers={"User-Agent": USER_AGENT},
+                timeout=NOMINATIM_TIMEOUT,
+            )
+            resp.raise_for_status()
+            return Response(resp.json(), status=status.HTTP_200_OK)
+        except Exception:
+            return Response([], status=status.HTTP_200_OK)
+
+
 class TokenObtainView(APIView):
     """
     POST /api/auth/token/
