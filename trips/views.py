@@ -163,6 +163,7 @@ class PlanRouteView(APIView):
                         "rest_stops": logbook["num_rest_stops"],
                         "fuel_stops": logbook["num_fuel_stops"],
                     },
+                    "request_id": getattr(request, "request_id", None),
                 }
             )
 

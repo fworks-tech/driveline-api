@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import timedelta
 from pathlib import Path
@@ -159,23 +160,40 @@ REST_FRAMEWORK = {
 }
 
 # Logging Configuration
+class RequestIdFilter(logging.Filter):
+    """Inject request_id from contextvars into log records."""
+
+    def filter(self, record):
+        from trips.middleware import request_id_var
+
+        request_id = request_id_var.get()
+        record.request_id = request_id or ""
+        return True
+
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
         "json": {
             "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
-            "format": "%(asctime)s %(name)s %(levelname)s %(message)s",
+            "format": "%(asctime)s %(name)s %(levelname)s %(message)s %(request_id)s",
         },
         "verbose": {
-            "format": "{asctime} {levelname} {name} {message}",
+            "format": "{asctime} {levelname} {name} [{request_id}] {message}",
             "style": "{",
+        },
+    },
+    "filters": {
+        "request_id": {
+            "()": RequestIdFilter,
         },
     },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "json" if not DEBUG else "verbose",
+            "filters": ["request_id"],
         },
     },
     "root": {

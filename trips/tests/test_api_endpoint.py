@@ -338,6 +338,42 @@ class TestPlanRouteAPI(TestCase):
         data = response.json()
         assert data["error"] == "routing_failed"
 
+    def test_response_includes_request_id_in_header(self):
+        """Test that X-Request-ID header is set in all responses."""
+        response = self.client.post(
+            self.endpoint,
+            data=json.dumps(
+                {
+                    "current_location": "Chicago, IL",
+                    "pickup_location": "Indianapolis, IN",
+                    "dropoff_location": "Dallas, TX",
+                    "cycle_hours_used": 100,  # Invalid, will trigger 400
+                }
+            ),
+            content_type="application/json",
+        )
+
+        assert "X-Request-ID" in response
+
+    def test_honors_inbound_x_request_id_header(self):
+        """Test that inbound X-Request-ID header is honored."""
+        inbound_id = "test-request-123"
+        response = self.client.post(
+            self.endpoint,
+            data=json.dumps(
+                {
+                    "current_location": "Chicago, IL",
+                    "pickup_location": "Indianapolis, IN",
+                    "dropoff_location": "Dallas, TX",
+                    "cycle_hours_used": 100,  # Invalid
+                }
+            ),
+            content_type="application/json",
+            HTTP_X_REQUEST_ID=inbound_id,
+        )
+
+        assert response["X-Request-ID"] == inbound_id
+
 
 class TestHealthCheckAPI(TestCase):
     """Test the application health endpoint."""

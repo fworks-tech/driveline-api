@@ -1,3 +1,4 @@
+import contextvars
 import logging
 import time
 import uuid
@@ -8,6 +9,10 @@ from django.http import HttpRequest, JsonResponse
 from trips.error_handler import TripPlanningError
 
 logger = logging.getLogger(__name__)
+
+request_id_var: contextvars.ContextVar[str] = contextvars.ContextVar(
+    "request_id", default=None
+)
 
 
 class RequestLoggingMiddleware:
@@ -20,11 +25,22 @@ class RequestLoggingMiddleware:
         self.get_response = get_response
 
     def __call__(self, request: HttpRequest):
-        request_id = str(uuid.uuid4())
+        # Read inbound X-Request-ID header; fall back to generating UUID
+        request_id = request.META.get("HTTP_X_REQUEST_ID")
+        if not request_id:
+            request_id = str(uuid.uuid4())
+
+        # Store in request object and context var for access throughout request lifecycle
         request.request_id = request_id
+        request_id_var.set(request_id)
+
         start = time.monotonic()
         response = self.get_response(request)
         elapsed_ms = round((time.monotonic() - start) * 1000, 1)
+
+        # Write X-Request-ID header to response for client correlation
+        response["X-Request-ID"] = request_id
+
         logger.info(
             "http_request",
             extra={
