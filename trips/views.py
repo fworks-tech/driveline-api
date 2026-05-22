@@ -168,17 +168,29 @@ class PlanRouteView(APIView):
 
         except CircuitOpenError as exc:
             return Response(
-                {"error": "service_unavailable", "detail": exc.detail},
+                {
+                    "error": "service_unavailable",
+                    "detail": exc.detail,
+                    "request_id": getattr(request, "request_id", None),
+                },
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
         except GeocodingError as exc:
             return Response(
-                {"error": "geocoding_failed", "detail": exc.detail},
+                {
+                    "error": "geocoding_failed",
+                    "detail": exc.detail,
+                    "request_id": getattr(request, "request_id", None),
+                },
                 status=status.HTTP_502_BAD_GATEWAY,
             )
         except RoutingError as exc:
             return Response(
-                {"error": "routing_failed", "detail": exc.detail},
+                {
+                    "error": "routing_failed",
+                    "detail": exc.detail,
+                    "request_id": getattr(request, "request_id", None),
+                },
                 status=status.HTTP_502_BAD_GATEWAY,
             )
         except ValueError:
@@ -186,6 +198,7 @@ class PlanRouteView(APIView):
                 {
                     "error": "invalid_input",
                     "detail": "Request validation failed. Please check your input.",
+                    "request_id": getattr(request, "request_id", None),
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -194,6 +207,7 @@ class PlanRouteView(APIView):
                 {
                     "error": "upstream_timeout",
                     "detail": "External API request timed out. Please try again later.",
+                    "request_id": getattr(request, "request_id", None),
                 },
                 status=status.HTTP_504_GATEWAY_TIMEOUT,
             )
@@ -202,6 +216,7 @@ class PlanRouteView(APIView):
                 {
                     "error": "upstream_error",
                     "detail": "External service error. Please try again later.",
+                    "request_id": getattr(request, "request_id", None),
                 },
                 status=status.HTTP_502_BAD_GATEWAY,
             )
@@ -210,6 +225,7 @@ class PlanRouteView(APIView):
                 {
                     "error": "internal_error",
                     "detail": "An unexpected error occurred. Please try again later.",
+                    "request_id": getattr(request, "request_id", None),
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

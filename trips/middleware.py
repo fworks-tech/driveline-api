@@ -52,7 +52,7 @@ class ErrorHandlingMiddleware:
             response = self.get_response(request)
             return response
         except TripPlanningError as e:
-            request_id = str(uuid.uuid4())
+            request_id = getattr(request, "request_id", str(uuid.uuid4()))
             logger.error(
                 f"[{request_id}] TripPlanningError: {e.message}",
                 extra={
@@ -70,7 +70,7 @@ class ErrorHandlingMiddleware:
                 status=e.status_code,
             )
         except Exception as e:
-            request_id = str(uuid.uuid4())
+            request_id = getattr(request, "request_id", str(uuid.uuid4()))
             logger.error(
                 f"[{request_id}] Unhandled exception: {type(e).__name__}: {str(e)}",
                 extra={"request_id": request_id},

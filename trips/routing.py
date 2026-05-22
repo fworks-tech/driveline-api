@@ -40,7 +40,7 @@ def _make_cache_key(prefix: str, *args, **kwargs) -> str:
     import hashlib
 
     args_key = json.dumps(args, sort_keys=True, default=str)
-    kwargs_key = json.dumps(kwargs, sort_keys=True, default=str)
+    kwargs_key = json.dumps(sorted(kwargs.items()), default=str)
     combined = f"{args_key}{kwargs_key}"
     hash_val = hashlib.md5(combined.encode()).hexdigest()
     return f"{prefix}_{hash_val}"
