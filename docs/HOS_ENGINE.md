@@ -315,19 +315,19 @@ The engine maintains these accumulators during simulation:
 
 ### Test File
 
-`tests/test_hos_engine.py`
+`trips/tests/test_hos_engine.py`
 
 ### Run Tests
 
 ```bash
 # Run all HOS engine tests
-pytest tests/test_hos_engine.py -v
+pytest trips/tests/test_hos_engine.py -v
 
 # Run specific test
-pytest tests/test_hos_engine.py::test_simulate_trip_basic -v
+pytest trips/tests/test_hos_engine.py::test_simulate_trip_basic -v
 
 # Run with coverage
-pytest tests/test_hos_engine.py --cov=trips.hos_engine --cov-report=term-missing
+pytest trips/tests/test_hos_engine.py --cov=trips.hos_engine --cov-report=term-missing
 ```
 
 ### Key Test Cases

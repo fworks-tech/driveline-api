@@ -401,7 +401,7 @@ class TestMyFeature:
 
 1. **One assertion per test** (or closely related assertions)
 2. **Descriptive test names** — should explain what's being tested
-3. **Use fixtures for common setup** (in `conftest.py`)
+3. **Use fixtures for common setup** (in `trips/tests/conftest.py`)
 4. **Mock external dependencies** (APIs, databases)
 5. **Test both success and failure paths**
 6. **Test edge cases** (empty input, max values, etc.)
