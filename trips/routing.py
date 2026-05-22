@@ -5,6 +5,15 @@ from functools import wraps
 import requests
 from django.core.cache import cache
 
+from trips.error_handler import (
+    GeocodingError,
+    RetryConfig,
+    RoutingError,
+    nominatim_breaker,
+    osrm_breaker,
+    with_retry,
+)
+
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 OSRM_URL = "https://router.project-osrm.org/route/v1/driving"
 
@@ -49,8 +58,9 @@ def _cached_api_call(timeout: int, key_prefix: str):
 
 
 @_cached_api_call(GEOCODE_CACHE_TIMEOUT, "geocode")
-def geocode(address: str) -> tuple[float, float]:
-    """Return (lat, lon) for a given address string using Nominatim."""
+@with_retry(RetryConfig(max_retries=3, base_delay=1.0, max_delay=8.0))
+def _geocode_call(address: str) -> tuple[float, float]:
+    """Internal geocoding call with retry logic."""
     resp = requests.get(
         NOMINATIM_URL,
         params={"q": address, "format": "json", "limit": 1},
@@ -66,24 +76,31 @@ def geocode(address: str) -> tuple[float, float]:
     return float(data[0]["lat"]), float(data[0]["lon"])
 
 
+def geocode(address: str) -> tuple[float, float]:
+    """Return (lat, lon) for a given address string using Nominatim.
+
+    Uses circuit breaker to fail gracefully if Nominatim is down.
+    Raises GeocodingError on failure (but lets Timeout bubble up to caller).
+    """
+    try:
+        return nominatim_breaker.call(_geocode_call, address)
+    except requests.exceptions.Timeout:
+        raise
+    except (requests.exceptions.RequestException, ValueError) as e:
+        raise GeocodingError(
+            f"Nominatim API error for '{address}'",
+            detail="Unable to look up location. Please try again.",
+        ) from e
+
+
 @_cached_api_call(ROUTE_CACHE_TIMEOUT, "route")
-def get_route(
+@with_retry(RetryConfig(max_retries=3, base_delay=1.0, max_delay=8.0))
+def _get_route_call(
     origin_ll: tuple[float, float],
     waypoint_ll: tuple[float, float],
     dest_ll: tuple[float, float],
 ) -> dict:
-    """
-    Fetch a driving route from origin -> waypoint -> destination via OSRM.
-
-    Returns:
-        {
-            "coordinates": [[lon, lat], ...],  # GeoJSON-style
-            "legs": [
-                {"distance_miles": float, "duration_hours": float},
-                {"distance_miles": float, "duration_hours": float},
-            ]
-        }
-    """
+    """Internal route calculation call with retry logic."""
     coords_str = (
         f"{origin_ll[1]},{origin_ll[0]};"
         f"{waypoint_ll[1]},{waypoint_ll[0]};"
@@ -101,7 +118,6 @@ def get_route(
         raise ValueError("OSRM could not find a route between the provided locations.")
 
     route = data["routes"][0]
-
     legs = []
     for leg in route["legs"]:
         legs.append(
@@ -111,5 +127,35 @@ def get_route(
             }
         )
 
-    coordinates = route["geometry"]["coordinates"]  # [[lon, lat], ...]
+    coordinates = route["geometry"]["coordinates"]
     return {"coordinates": coordinates, "legs": legs}
+
+
+def get_route(
+    origin_ll: tuple[float, float],
+    waypoint_ll: tuple[float, float],
+    dest_ll: tuple[float, float],
+) -> dict:
+    """Fetch a driving route from origin -> waypoint -> destination via OSRM.
+
+    Uses circuit breaker to fail gracefully if OSRM is down.
+    Raises RoutingError on failure (but lets Timeout bubble up to caller).
+
+    Returns:
+        {
+            "coordinates": [[lon, lat], ...],  # GeoJSON-style
+            "legs": [
+                {"distance_miles": float, "duration_hours": float},
+                {"distance_miles": float, "duration_hours": float},
+            ]
+        }
+    """
+    try:
+        return osrm_breaker.call(_get_route_call, origin_ll, waypoint_ll, dest_ll)
+    except requests.exceptions.Timeout:
+        raise
+    except (requests.exceptions.RequestException, ValueError) as e:
+        raise RoutingError(
+            "OSRM routing API error",
+            detail="Unable to calculate route. Please try again.",
+        ) from e

@@ -73,6 +73,7 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "trips.middleware.ErrorHandlingMiddleware",
 ]
 
 ROOT_URLCONF = "spotter.urls"

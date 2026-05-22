@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from django.core.cache import cache
 
+from trips.error_handler import GeocodingError, RoutingError
 from trips.routing import geocode, get_route
 
 
@@ -30,12 +31,12 @@ class TestGeocoding(unittest.TestCase):
 
     @patch("trips.routing.requests.get")
     def test_geocode_invalid_address(self, mock_get):
-        """Test geocoding an invalid address raises ValueError."""
+        """Test geocoding an invalid address raises GeocodingError."""
         mock_response = MagicMock()
         mock_response.json.return_value = []
         mock_get.return_value = mock_response
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(GeocodingError):
             geocode("InvalidCityThatDoesNotExist")
 
     @patch("trips.routing.requests.get")
@@ -114,7 +115,7 @@ class TestRouting(unittest.TestCase):
         mock_response.json.return_value = {"code": "NoRoute"}
         mock_get.return_value = mock_response
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(RoutingError):
             get_route(
                 (41.8781, -87.6298),
                 (50.0, -120.0),  # Unreachable waypoint
