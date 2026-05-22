@@ -53,7 +53,8 @@ class RetryConfig:
 def with_retry(config: Optional[RetryConfig] = None) -> Callable:
     """Decorator that retries a function with exponential backoff and jitter.
 
-    Retries on transient errors (ConnectionError, etc.) but not on timeouts.
+    Retries on transient errors (ConnectionError, etc.) but not on timeouts or
+    bad responses. ValueError from bad API responses (empty results) is not retried.
 
     Args:
         config: RetryConfig with backoff settings. Defaults to 3 retries, 1s-8s delays.
@@ -72,7 +73,9 @@ def with_retry(config: Optional[RetryConfig] = None) -> Callable:
                     return func(*args, **kwargs)
                 except requests.exceptions.Timeout:
                     raise
-                except (ConnectionError, ValueError) as e:
+                except ValueError:
+                    raise
+                except ConnectionError as e:
                     last_exception = e
                     if attempt < config.max_retries:
                         delay = min(config.base_delay * (2**attempt), config.max_delay)
@@ -140,18 +143,32 @@ class CircuitBreaker:
 
     def get_state(self) -> str:
         """Get current circuit state."""
-        state = cache.get(self._get_state_key(), self.CLOSED)
-        if state == self.OPEN:
-            opened_at = cache.get(self._get_opened_at_key())
-            if (
-                opened_at
-                and datetime.fromisoformat(opened_at)
-                + timedelta(seconds=self.recovery_timeout)
-                < datetime.now()
-            ):
-                self._transition_to_half_open()
-                return self.HALF_OPEN
-        return state
+        try:
+            state = cache.get(self._get_state_key(), self.CLOSED)
+            if state == self.OPEN:
+                opened_at = cache.get(self._get_opened_at_key())
+                if opened_at:
+                    try:
+                        opened_time = datetime.fromisoformat(opened_at)
+                        if (
+                            opened_time + timedelta(seconds=self.recovery_timeout)
+                            < datetime.now()
+                        ):
+                            self._transition_to_half_open()
+                            return self.HALF_OPEN
+                    except (ValueError, TypeError) as e:
+                        logger.error(
+                            f"Failed to parse circuit breaker timestamp for '{self.name}': {e}"
+                        )
+                        cache.delete(self._get_opened_at_key())
+                        return self.CLOSED
+            return state
+        except Exception as e:
+            logger.error(
+                f"Cache error in circuit breaker '{self.name}': {e}. "
+                f"Defaulting to CLOSED state."
+            )
+            return self.CLOSED
 
     def _transition_to_half_open(self) -> None:
         """Transition from OPEN to HALF_OPEN state."""

@@ -1,4 +1,5 @@
 import time
+from unittest.mock import patch
 
 import pytest
 from django.core.cache import cache
@@ -106,6 +107,52 @@ class TestRetryDecorator:
         assert delay1 <= 0.15
         assert delay2 >= 0.15
         assert delay2 <= 0.25
+
+    def test_retry_does_not_retry_value_error(self):
+        """Test that ValueError (bad response) is not retried."""
+        config = RetryConfig(max_retries=3, base_delay=0.01)
+        call_count = [0]
+
+        @with_retry(config)
+        def geocoding_fails():
+            call_count[0] += 1
+            raise ValueError("Could not geocode address")
+
+        with pytest.raises(ValueError, match="Could not geocode"):
+            geocoding_fails()
+
+        assert call_count[0] == 1
+
+    def test_retry_does_not_retry_timeout(self):
+        """Test that Timeout is not retried."""
+        config = RetryConfig(max_retries=3, base_delay=0.01)
+        call_count = [0]
+
+        @with_retry(config)
+        def api_timeout():
+            call_count[0] += 1
+            raise TimeoutError("Request timed out")
+
+        with pytest.raises(TimeoutError):
+            api_timeout()
+
+        assert call_count[0] == 1
+
+    def test_retry_only_retries_connection_error(self):
+        """Test that only ConnectionError is retried."""
+        config = RetryConfig(max_retries=2, base_delay=0.01, max_delay=0.05)
+        call_count = [0]
+
+        @with_retry(config)
+        def connection_fails():
+            call_count[0] += 1
+            if call_count[0] < 3:
+                raise ConnectionError("Connection refused")
+            return "success"
+
+        result = connection_fails()
+        assert result == "success"
+        assert call_count[0] == 3
 
 
 class TestCircuitBreaker:
@@ -271,3 +318,26 @@ class TestIntegration:
 
         with pytest.raises(CircuitOpenError):
             nominatim_breaker_test.call(nominatim_call)
+
+    def test_circuit_breaker_handles_cache_error_gracefully(self):
+        """Test that cache errors don't crash the circuit breaker."""
+        breaker = CircuitBreaker("cache_test")
+
+        with patch("trips.error_handler.cache.get") as mock_cache_get:
+            mock_cache_get.side_effect = Exception("Cache unavailable")
+
+            state = breaker.get_state()
+            assert state == CircuitBreaker.CLOSED
+
+    def test_circuit_breaker_handles_invalid_timestamp(self):
+        """Test that malformed timestamps are handled gracefully."""
+        breaker = CircuitBreaker("timestamp_test")
+        breaker_state_key = breaker._get_state_key()
+        breaker_opened_key = breaker._get_opened_at_key()
+
+        cache.set(breaker_state_key, CircuitBreaker.OPEN, None)
+        cache.set(breaker_opened_key, "invalid-timestamp", None)
+
+        state = breaker.get_state()
+        assert state == CircuitBreaker.CLOSED
+        assert cache.get(breaker_opened_key) is None
