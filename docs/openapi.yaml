@@ -79,15 +79,6 @@ paths:
                     type: string
                     description: JWT refresh token
           description: ''
-  /api/health/:
-    get:
-      operationId: health_retrieve
-      description: Simple liveness endpoint for container and deployment health checks.
-      tags:
-      - health
-      responses:
-        '200':
-          description: No response body
   /api/plan-route/:
     post:
       operationId: plan_route_create
@@ -321,7 +312,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this trip.
         required: true
       tags:
       - trips
@@ -349,7 +341,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this trip.
         required: true
       tags:
       - trips
@@ -383,7 +376,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this trip.
         required: true
       tags:
       - trips
@@ -416,7 +410,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this trip.
         required: true
       tags:
       - trips
@@ -427,15 +422,26 @@ paths:
           description: No response body
   /health/:
     get:
-      operationId: health_retrieve_2
+      operationId: health_retrieve
       description: Simple liveness endpoint for container and deployment health checks.
       tags:
       - health
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheck'
+          description: ''
 components:
   schemas:
+    HealthCheck:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+      - status
     LogbookDay:
       type: object
       properties:
@@ -443,20 +449,44 @@ components:
           type: integer
         date_offset:
           type: integer
+        date:
+          type: string
+          maxLength: 10
+        from_location:
+          type: string
+          maxLength: 255
+        to_location:
+          type: string
+          maxLength: 255
+        daily_miles:
+          type: number
+          format: double
+        cumulative_miles:
+          type: number
+          format: double
         total_driving_hours:
           type: number
           format: double
         total_on_duty_hours:
           type: number
           format: double
+        row_totals:
+          type: object
+          additionalProperties: {}
         events:
           type: array
           items:
             $ref: '#/components/schemas/LogbookEvent'
       required:
+      - cumulative_miles
+      - daily_miles
+      - date
       - date_offset
       - day
       - events
+      - from_location
+      - row_totals
+      - to_location
       - total_driving_hours
       - total_on_duty_hours
     LogbookEvent:
@@ -526,8 +556,22 @@ components:
           type: string
           maxLength: 255
         cycle_hours_used:
-          type: integer
+          type: number
+          format: double
           description: Hours already used in current 70-hour cycle
+        trip_date:
+          type: string
+          format: date
+          nullable: true
+        tractor_number:
+          type: string
+          maxLength: 50
+        trailer_number:
+          type: string
+          maxLength: 50
+        shipper_name:
+          type: string
+          maxLength: 255
         route_coordinates: {}
         markers: {}
         logbook_days: {}
@@ -572,8 +616,22 @@ components:
           type: string
           maxLength: 255
         cycle_hours_used:
-          type: integer
+          type: number
+          format: double
           description: Hours already used in current 70-hour cycle
+        trip_date:
+          type: string
+          format: date
+          nullable: true
+        tractor_number:
+          type: string
+          maxLength: 50
+        trailer_number:
+          type: string
+          maxLength: 50
+        shipper_name:
+          type: string
+          maxLength: 255
         route_coordinates: {}
         markers: {}
         logbook_days: {}
@@ -617,6 +675,22 @@ components:
           format: double
           maximum: 70
           minimum: 0
+        trip_date:
+          type: string
+          format: date
+          nullable: true
+        tractor_number:
+          type: string
+          default: ''
+          maxLength: 50
+        trailer_number:
+          type: string
+          default: ''
+          maxLength: 50
+        shipper_name:
+          type: string
+          default: ''
+          maxLength: 255
       required:
       - current_location
       - cycle_hours_used
@@ -642,6 +716,22 @@ components:
           format: double
           maximum: 70
           minimum: 0
+        trip_date:
+          type: string
+          format: date
+          nullable: true
+        tractor_number:
+          type: string
+          default: ''
+          maxLength: 50
+        trailer_number:
+          type: string
+          default: ''
+          maxLength: 50
+        shipper_name:
+          type: string
+          default: ''
+          maxLength: 255
       required:
       - current_location
       - cycle_hours_used
@@ -664,8 +754,16 @@ components:
           type: string
           maxLength: 255
         cycle_hours_used:
-          type: integer
+          type: number
+          format: double
           description: Hours already used in current 70-hour cycle
+        trip_date:
+          type: string
+          format: date
+          nullable: true
+        tractor_number:
+          type: string
+          maxLength: 50
         status:
           $ref: '#/components/schemas/StatusEnum'
         created_at:

@@ -20,7 +20,7 @@ Your Development Machine
 │  ┌──────────────────────┐     ┌──────────────────────┐    │
 │  │ Django 4.2           │     │ Vite Dev Server      │    │
 │  │ Port: 8000           │◄────│ Port: 3000           │    │
-│  │ /api/v1/plan-route/     │     │ (auto-proxy /api)    │    │
+│  │ /api/plan-route/     │     │ (auto-proxy /api)    │    │
 │  └──────────────────────┘     └──────────────────────┘    │
 │  Calls:                       Browser                      │
 │  - Nominatim API              http://localhost:3000        │
@@ -94,7 +94,7 @@ Open in browser: **http://localhost:8000/api/docs/**
 
 You should see:
 - ✅ Swagger UI (interactive API documentation)
-- ✅ Single endpoint: `POST /api/v1/plan-route/`
+- ✅ Single endpoint: `POST /api/plan-route/`
 - ✅ Request/response schemas
 - ✅ "Try it out" button to test manually
 
@@ -295,7 +295,7 @@ Click **"Plan Route"** button.
 
 **Backend Terminal 1:**
 ```
-[20/May/2026 14:36:22] "POST /api/v1/plan-route/ HTTP/1.1" 200 5234
+[20/May/2026 14:36:22] "POST /api/plan-route/ HTTP/1.1" 200 5234
 ```
 
 **Frontend Console (DevTools → Console):**
@@ -304,7 +304,7 @@ Click **"Plan Route"** button.
 ```
 
 **Browser Network Tab (DevTools → Network):**
-- Request: `POST /api/v1/plan-route/`
+- Request: `POST /api/plan-route/`
 - Status: `200`
 - Response size: ~5 KB
 - Duration: 2–5 seconds
@@ -344,7 +344,7 @@ CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 
 Must include your frontend URL.
 
-### Frontend: "Cannot POST /api/v1/plan-route/ (404 Not Found)"
+### Frontend: "Cannot POST /api/plan-route/ (404 Not Found)"
 
 **Problem:** Proxy isn't forwarding requests to backend correctly.
 
