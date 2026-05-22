@@ -129,7 +129,7 @@ TOTAL                   139     17    87%   Excellent
 
 ## API Endpoint Validation
 
-### POST /api/plan-route/ — Comprehensive Testing
+### POST /api/v1/plan-route/ — Comprehensive Testing
 
 #### Request Validation
 - ✅ Valid request with all fields → 200 OK
@@ -182,7 +182,7 @@ TOTAL                   139     17    87%   Excellent
 | Check | Result | Details |
 |-------|--------|---------|
 | Schema valid YAML | ✅ Pass | Valid OpenAPI 3.1.0 spec |
-| All endpoints documented | ✅ Pass | 1 endpoint: POST /api/plan-route/ |
+| All endpoints documented | ✅ Pass | 1 endpoint: POST /api/v1/plan-route/ |
 | Request schemas defined | ✅ Pass | PlanRouteRequest schema complete |
 | Response schemas defined | ✅ Pass | PlanRouteResponse schema complete |
 | Error responses documented | ✅ Pass | 400, 500 errors documented |

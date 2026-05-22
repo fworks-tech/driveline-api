@@ -7,12 +7,12 @@ from requests.exceptions import ConnectTimeout, ReadTimeout
 
 
 class TestPlanRouteAPI(TestCase):
-    """Integration tests for POST /api/plan-route/ endpoint."""
+    """Integration tests for POST /api/v1/plan-route/ endpoint."""
 
     def setUp(self):
         """Initialize test client and clear cache."""
         self.client = Client()
-        self.endpoint = "/api/plan-route/"
+        self.endpoint = "/api/v1/plan-route/"
         cache.clear()
 
     @patch("trips.routing.geocode")

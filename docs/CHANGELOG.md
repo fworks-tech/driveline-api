@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Django 4.2 + Django REST Framework 3.15.1
 - drf-spectacular for OpenAPI 3.0 schema generation
 - OpenAPI validation on CI/CD (100% compliance enforced)
-- Complete trip planning endpoint (POST /api/plan-route/)
+- Complete trip planning endpoint (POST /api/v1/plan-route/)
 - OSRM integration for route calculation
 - Nominatim integration for geocoding
 - HOS (Hours of Service) simulation engine

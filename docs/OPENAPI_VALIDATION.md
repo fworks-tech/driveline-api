@@ -246,7 +246,7 @@ Step 5b: If match → CI PASSES ✅
 
 ## Common Issues
 
-### Issue: "Endpoint not implemented: /api/plan-route/"
+### Issue: "Endpoint not implemented: /api/v1/plan-route/"
 
 **Cause:** Endpoint is in spec but not in code.
 

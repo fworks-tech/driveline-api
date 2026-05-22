@@ -5,11 +5,11 @@ from trips.views import HealthCheckView
 
 urlpatterns = [
     path("health/", HealthCheckView.as_view(), name="health"),
+    path("api/v1/", include("trips.urls")),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
         "api/docs/",
         SpectacularSwaggerView.as_view(url_name="schema"),
         name="swagger-ui",
     ),
-    path("api/", include("trips.urls")),
 ]
