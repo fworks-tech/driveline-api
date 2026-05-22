@@ -136,6 +136,11 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
     ],
+    "DEFAULT_THROTTLE_CLASSES": [],
+    "DEFAULT_THROTTLE_RATES": {
+        "plan_route": "60/min",
+        "auth": "30/min",
+    },
 }
 
 # JWT Configuration
