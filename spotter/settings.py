@@ -12,9 +12,7 @@ SENTRY_DSN = os.environ.get("SENTRY_DSN", "")
 if SENTRY_DSN:
     sentry_sdk.init(
         dsn=SENTRY_DSN,
-        traces_sample_rate=float(
-            os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0.1")
-        ),
+        traces_sample_rate=float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0.1")),
         environment=os.environ.get("DJANGO_ENV", "development"),
         send_default_pii=False,
     )

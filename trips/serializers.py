@@ -70,6 +70,10 @@ class TripOutputSerializer(serializers.Serializer):
     trip_summary = TripSummarySerializer()
 
 
+class HealthCheckSerializer(serializers.Serializer):
+    status = serializers.CharField()
+
+
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):

@@ -174,7 +174,7 @@ if not os.environ.get("DATABASE_URL") and not DEBUG:
 
 ### 3.1 ✅ Good: Versioned API Endpoints
 **File:** `spotter/urls.py:8`  
-All endpoints prefixed with `/api/v1/`. Easy to support v2 later.
+All endpoints prefixed with `/api/`. Easy to support v2 later.
 
 ---
 
