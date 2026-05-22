@@ -15,6 +15,7 @@ Rules enforced:
 from __future__ import annotations
 
 import json
+from datetime import date, timedelta
 
 from django.core.cache import cache
 
@@ -64,13 +65,23 @@ def simulate_trip(
     current_cycle_used_hours: float,
     leg1_miles: float,
     leg2_miles: float,
+    start_date: date | None = None,
+    from_location: str = "Current Location",
+    to_location: str = "Dropoff Location",
 ) -> dict:
     """
     Simulate the full trip and return structured logbook data.
 
     leg1 = current_location -> pickup
     leg2 = pickup -> dropoff
+
+    Args:
+        start_date: Optional start date; defaults to today
+        from_location: Starting location for log header
+        to_location: Destination location for log header
     """
+    if start_date is None:
+        start_date = date.today()
     # Check cache first
     cache_key = _make_hos_cache_key(
         total_distance_miles,
@@ -296,6 +307,8 @@ def simulate_trip(
 
     logbook_days = []
     total_driving_hours = 0.0
+    cumulative_miles = 0.0
+    cumulative_on_duty_hours = 0.0
 
     for day in range(num_days):
         day_start = day * 24.0
@@ -304,6 +317,10 @@ def simulate_trip(
         day_events = []
         day_drive = 0.0
         day_on_duty = 0.0
+        day_miles = 0.0
+        day_off_duty = 0.0
+        day_sleeper = 0.0
+        day_on_duty_nd = 0.0
 
         for ev in events:
             # Clip event to this 24-hour window
@@ -312,60 +329,92 @@ def simulate_trip(
             if seg_end <= seg_start:
                 continue
 
+            duration = seg_end - seg_start
             clipped = {
                 "status": ev["status"],
                 "start_hour": round(seg_start - day_start, 4),
                 "end_hour": round(seg_end - day_start, 4),
-                "duration_hours": round(seg_end - seg_start, 4),
+                "duration_hours": round(duration, 4),
                 "label": ev["label"],
                 "location": ev.get("location", ""),
             }
             day_events.append(clipped)
 
             if ev["status"] == "DRIVING":
-                day_drive += seg_end - seg_start
+                day_drive += duration
+                day_miles += (
+                    (duration / (leg1_hours + leg2_hours)) * total_distance_miles
+                    if (leg1_hours + leg2_hours) > 0
+                    else 0
+                )
             if ev["status"] in ("DRIVING", "ON_DUTY_ND"):
-                day_on_duty += seg_end - seg_start
+                day_on_duty += duration
+            if ev["status"] == "OFF_DUTY":
+                day_off_duty += duration
+            if ev["status"] == "SLEEPER_BERTH":
+                day_sleeper += duration
+            if ev["status"] == "ON_DUTY_ND":
+                day_on_duty_nd += duration
 
         # Fill gaps with OFF_DUTY
         day_events_filled = []
         cursor = 0.0
         for ev in sorted(day_events, key=lambda e: e["start_hour"]):
             if ev["start_hour"] > cursor + 0.001:
+                gap_duration = ev["start_hour"] - cursor
                 day_events_filled.append(
                     {
                         "status": "OFF_DUTY",
                         "start_hour": round(cursor, 4),
                         "end_hour": round(ev["start_hour"], 4),
-                        "duration_hours": round(ev["start_hour"] - cursor, 4),
+                        "duration_hours": round(gap_duration, 4),
                         "label": "Off Duty",
                         "location": "",
                     }
                 )
+                day_off_duty += gap_duration
             day_events_filled.append(ev)
             cursor = ev["end_hour"]
 
         if cursor < 24.0 - 0.001:
+            gap_duration = 24.0 - cursor
             day_events_filled.append(
                 {
                     "status": "OFF_DUTY",
                     "start_hour": round(cursor, 4),
                     "end_hour": 24.0,
-                    "duration_hours": round(24.0 - cursor, 4),
+                    "duration_hours": round(gap_duration, 4),
                     "label": "Off Duty",
                     "location": "",
                 }
             )
+            day_off_duty += gap_duration
 
         total_driving_hours += day_drive
+        cumulative_miles += day_miles
+        cumulative_on_duty_hours += day_on_duty
+
+        day_date = start_date + timedelta(days=day)
+        day_date_str = day_date.strftime("%m/%d/%Y")
 
         logbook_days.append(
             {
                 "day": day,
                 "date_offset": day,
+                "date": day_date_str,
+                "from_location": from_location,
+                "to_location": to_location,
                 "events": day_events_filled,
                 "total_driving_hours": round(day_drive, 2),
                 "total_on_duty_hours": round(day_on_duty, 2),
+                "daily_miles": round(day_miles, 1),
+                "cumulative_miles": round(cumulative_miles, 1),
+                "row_totals": {
+                    "off_duty_hours": round(day_off_duty, 2),
+                    "sleeper_berth_hours": round(day_sleeper, 2),
+                    "driving_hours": round(day_drive, 2),
+                    "on_duty_not_driving_hours": round(day_on_duty_nd, 2),
+                },
             }
         )
 
