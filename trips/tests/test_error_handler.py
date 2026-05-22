@@ -108,6 +108,52 @@ class TestRetryDecorator:
         assert delay2 >= 0.15
         assert delay2 <= 0.25
 
+    def test_retry_does_not_retry_value_error(self):
+        """Test that ValueError (bad response) is not retried."""
+        config = RetryConfig(max_retries=3, base_delay=0.01)
+        call_count = [0]
+
+        @with_retry(config)
+        def geocoding_fails():
+            call_count[0] += 1
+            raise ValueError("Could not geocode address")
+
+        with pytest.raises(ValueError, match="Could not geocode"):
+            geocoding_fails()
+
+        assert call_count[0] == 1
+
+    def test_retry_does_not_retry_timeout(self):
+        """Test that Timeout is not retried."""
+        config = RetryConfig(max_retries=3, base_delay=0.01)
+        call_count = [0]
+
+        @with_retry(config)
+        def api_timeout():
+            call_count[0] += 1
+            raise TimeoutError("Request timed out")
+
+        with pytest.raises(TimeoutError):
+            api_timeout()
+
+        assert call_count[0] == 1
+
+    def test_retry_only_retries_connection_error(self):
+        """Test that only ConnectionError is retried."""
+        config = RetryConfig(max_retries=2, base_delay=0.01, max_delay=0.05)
+        call_count = [0]
+
+        @with_retry(config)
+        def connection_fails():
+            call_count[0] += 1
+            if call_count[0] < 3:
+                raise ConnectionError("Connection refused")
+            return "success"
+
+        result = connection_fails()
+        assert result == "success"
+        assert call_count[0] == 3
+
 
 class TestCircuitBreaker:
     """Test circuit breaker state transitions and behavior."""
