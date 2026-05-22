@@ -152,7 +152,7 @@ class CircuitBreaker:
                         opened_time = datetime.fromisoformat(opened_at)
                         if (
                             opened_time + timedelta(seconds=self.recovery_timeout)
-                            < datetime.now()
+                            < datetime.utcnow()
                         ):
                             self._transition_to_half_open()
                             return self.HALF_OPEN
@@ -202,7 +202,7 @@ class CircuitBreaker:
 
         if failures >= self.failure_threshold:
             cache.set(self._get_state_key(), self.OPEN, None)
-            cache.set(self._get_opened_at_key(), datetime.now().isoformat(), None)
+            cache.set(self._get_opened_at_key(), datetime.utcnow().isoformat(), None)
             logger.error(
                 f"Circuit breaker '{self.name}' opened after {failures} failures"
             )
