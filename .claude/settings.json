@@ -17,7 +17,10 @@
       "Bash(python -m pytest \"c:\\\\Github\\\\spotter-eld-logging-api\\\\trips\\\\tests\" -v --cov=\"c:\\\\Github\\\\spotter-eld-logging-api\\\\trips\" --cov-report=term-missing)",
       "Bash(python -m pytest \"c:\\\\Github\\\\spotter-eld-logging-api\\\\trips\\\\tests\\\\test_response_structure.py::TestResponseStructure::test_route_coordinates_use_geojson_format\" -xvs)",
       "Bash(bash scripts/generate-api-client.sh*)",
-      "Bash(python manage.py makemigrations trips)"
+      "Bash(python manage.py makemigrations trips)",
+      "Bash(pkill -f \"manage.py runserver\")",
+      "Bash(curl -s -X POST http://localhost:8000/api/plan-route/ -H 'Content-Type: application/json' -d '{\"current_location\": \"Chicago, IL\", \"pickup_location\": \"Indianapolis, IN\", \"dropoff_location\": \"Columbus, OH\", \"cycle_hours_used\": 30}')",
+      "Bash(python -c \"import sys, json; data = json.load\\(sys.stdin\\); print\\('✓ API Working'\\); print\\('✓ Distance:', data['trip_summary']['total_distance_miles'], 'miles'\\); print\\('✓ Drive Hours:', data['trip_summary']['total_drive_hours'], 'hours'\\)\")"
     ],
     "additionalDirectories": [
       "C:\\Github\\spotter-eld-logging-api\\.claude"
