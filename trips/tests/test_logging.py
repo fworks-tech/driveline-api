@@ -61,7 +61,7 @@ class TestRequestLoggingMiddleware(TestCase):
         """Test that POST requests are logged correctly."""
         with self.assertLogs("trips.middleware", level="INFO") as log_ctx:
             self.client.post(
-                "/api/v1/auth/register/",
+                "/api/auth/register/",
                 data="{}",
                 content_type="application/json",
             )

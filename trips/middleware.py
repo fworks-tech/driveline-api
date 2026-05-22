@@ -13,13 +13,15 @@ logger = logging.getLogger(__name__)
 class RequestLoggingMiddleware:
     """Django middleware for structured HTTP request logging.
 
-    Logs method, path, status code, and elapsed time for every request.
+    Logs method, path, status code, elapsed time, and request_id for every request.
     """
 
     def __init__(self, get_response: Callable):
         self.get_response = get_response
 
     def __call__(self, request: HttpRequest):
+        request_id = str(uuid.uuid4())
+        request.request_id = request_id
         start = time.monotonic()
         response = self.get_response(request)
         elapsed_ms = round((time.monotonic() - start) * 1000, 1)
@@ -30,6 +32,7 @@ class RequestLoggingMiddleware:
                 "path": request.path,
                 "status_code": response.status_code,
                 "elapsed_ms": elapsed_ms,
+                "request_id": request_id,
             },
         )
         return response

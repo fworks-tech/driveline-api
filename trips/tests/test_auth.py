@@ -5,11 +5,11 @@ from django.test import Client, TestCase
 
 
 class TestUserRegistration(TestCase):
-    """Tests for POST /api/v1/auth/register/ endpoint."""
+    """Tests for POST /api/auth/register/ endpoint."""
 
     def setUp(self):
         self.client = Client()
-        self.endpoint = "/api/v1/auth/register/"  # Root URL includes api/v1/ prefix
+        self.endpoint = "/api/auth/register/"  # Root URL includes api/v1/ prefix
 
     def test_register_new_user_success(self):
         """Test successful user registration."""
@@ -122,11 +122,11 @@ class TestUserRegistration(TestCase):
 
 
 class TestTokenObtain(TestCase):
-    """Tests for POST /api/v1/auth/token/ endpoint."""
+    """Tests for POST /api/auth/token/ endpoint."""
 
     def setUp(self):
         self.client = Client()
-        self.endpoint = "/api/v1/auth/token/"
+        self.endpoint = "/api/auth/token/"
         # Create a test user
         self.user = User.objects.create_user(
             username="testdriver", email="driver@example.com", password="testpass123"
@@ -206,7 +206,7 @@ class TestTokenObtain(TestCase):
             self.endpoint, data=json.dumps(payload), content_type="application/json"
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 400)
         errors = response.json()
         self.assertIn("username", errors)
 
@@ -219,7 +219,7 @@ class TestTokenObtain(TestCase):
             self.endpoint, data=json.dumps(payload), content_type="application/json"
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 400)
         errors = response.json()
         self.assertIn("password", errors)
 

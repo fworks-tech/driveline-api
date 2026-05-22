@@ -1,5 +1,3 @@
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
 from drf_spectacular.utils import extend_schema
 from requests.exceptions import RequestException, Timeout
 from rest_framework import status
@@ -26,7 +24,7 @@ class HealthCheckView(APIView):
 
 class PlanRouteView(APIView):
     """
-    POST /api/v1/plan-route/
+    POST /api/plan-route/
 
     Accepts trip details, geocodes locations, fetches route from OSRM,
     runs HOS simulation, and returns full trip data.
@@ -174,8 +172,14 @@ class PlanRouteView(APIView):
                 {"error": "routing_failed", "detail": exc.detail},
                 status=status.HTTP_502_BAD_GATEWAY,
             )
-        except ValueError as exc:
-            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except ValueError:
+            return Response(
+                {
+                    "error": "invalid_input",
+                    "detail": "Request validation failed. Please check your input.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         except Timeout:
             return Response(
                 {
@@ -184,19 +188,19 @@ class PlanRouteView(APIView):
                 },
                 status=status.HTTP_504_GATEWAY_TIMEOUT,
             )
-        except RequestException as exc:
+        except RequestException:
             return Response(
                 {
                     "error": "upstream_error",
-                    "detail": f"External API error: {str(exc)}. Please try again later.",
+                    "detail": "External service error. Please try again later.",
                 },
                 status=status.HTTP_502_BAD_GATEWAY,
             )
-        except Exception as exc:
+        except Exception:
             return Response(
                 {
                     "error": "internal_error",
-                    "detail": f"An unexpected error occurred: {str(exc)}",
+                    "detail": "An unexpected error occurred. Please try again later.",
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
@@ -251,12 +255,12 @@ def _build_stop_markers(
     return markers
 
 
-@method_decorator(csrf_exempt, name="dispatch")
 class TokenObtainView(APIView):
     """
-    POST /api/v1/auth/token/
+    POST /api/auth/token/
 
     Obtain JWT tokens using username and password.
+    Stateless JWT auth: no session cookies, CSRF protection not applicable.
     """
 
     authentication_classes = []
@@ -290,17 +294,17 @@ class TokenObtainView(APIView):
 
         serializer = CustomTokenObtainPairSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
 
-@method_decorator(csrf_exempt, name="dispatch")
 class UserRegistrationView(APIView):
     """
-    POST /api/v1/auth/register/
+    POST /api/auth/register/
 
     Register a new user account.
+    Stateless JWT auth: no session cookies, CSRF protection not applicable.
     """
 
     authentication_classes = []
