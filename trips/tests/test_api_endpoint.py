@@ -17,9 +17,9 @@ class TestPlanRouteAPI(TestCase):
         self.endpoint = "/api/plan-route/"
         cache.clear()
 
-    @patch("trips.routing.geocode")
-    @patch("trips.routing.get_route")
-    @patch("trips.hos_engine.simulate_trip")
+    @patch("trips.services.geocode")
+    @patch("trips.services.get_route")
+    @patch("trips.services.simulate_trip")
     def test_successful_route_planning(self, mock_hos, mock_route, mock_geocode):
         """Test successful route planning request."""
         # Mock geocoding results
@@ -56,6 +56,9 @@ class TestPlanRouteAPI(TestCase):
                 {
                     "day": 0,
                     "date_offset": 0,
+                    "date": "05/22/2026",
+                    "from_location": "Chicago, IL",
+                    "to_location": "Dallas, TX",
                     "events": [
                         {
                             "status": "DRIVING",
@@ -74,6 +77,14 @@ class TestPlanRouteAPI(TestCase):
                     ],
                     "total_driving_hours": 11.0,
                     "total_on_duty_hours": 11.0,
+                    "daily_miles": 850.0,
+                    "cumulative_miles": 850.0,
+                    "row_totals": {
+                        "off_duty_hours": 13.0,
+                        "sleeper_berth_hours": 0.0,
+                        "driving_hours": 11.0,
+                        "on_duty_not_driving_hours": 0.0,
+                    },
                 }
             ],
             "total_trip_hours": 12.5,
@@ -107,7 +118,7 @@ class TestPlanRouteAPI(TestCase):
         # Verify markers include all stops
         assert len(data["markers"]) >= 3  # Start, pickup, dropoff
 
-    @patch("trips.routing.geocode")
+    @patch("trips.services.geocode")
     def test_invalid_current_location(self, mock_geocode):
         """Test request with invalid current location raises GeocodingError."""
         mock_geocode.side_effect = GeocodingError("Geocoding failed", "Invalid address")
@@ -338,6 +349,42 @@ class TestPlanRouteAPI(TestCase):
         data = response.json()
         assert data["error"] == "routing_failed"
 
+    def test_response_includes_request_id_in_header(self):
+        """Test that X-Request-ID header is set in all responses."""
+        response = self.client.post(
+            self.endpoint,
+            data=json.dumps(
+                {
+                    "current_location": "Chicago, IL",
+                    "pickup_location": "Indianapolis, IN",
+                    "dropoff_location": "Dallas, TX",
+                    "cycle_hours_used": 100,  # Invalid, will trigger 400
+                }
+            ),
+            content_type="application/json",
+        )
+
+        assert "X-Request-ID" in response
+
+    def test_honors_inbound_x_request_id_header(self):
+        """Test that inbound X-Request-ID header is honored."""
+        inbound_id = "test-request-123"
+        response = self.client.post(
+            self.endpoint,
+            data=json.dumps(
+                {
+                    "current_location": "Chicago, IL",
+                    "pickup_location": "Indianapolis, IN",
+                    "dropoff_location": "Dallas, TX",
+                    "cycle_hours_used": 100,  # Invalid
+                }
+            ),
+            content_type="application/json",
+            HTTP_X_REQUEST_ID=inbound_id,
+        )
+
+        assert response["X-Request-ID"] == inbound_id
+
 
 class TestHealthCheckAPI(TestCase):
     """Test the application health endpoint."""
@@ -359,8 +406,8 @@ class TestMarkerGeneration(TestCase):
         """Initialize test client."""
         self.client = Client()
 
-    @patch("trips.routing.geocode")
-    @patch("trips.routing.get_route")
+    @patch("trips.services.geocode")
+    @patch("trips.services.get_route")
     def test_marker_types(self, mock_route, mock_geocode):
         """Test that correct marker types are generated."""
         mock_geocode.side_effect = [

@@ -6,9 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .error_handler import CircuitOpenError, GeocodingError, RoutingError
-from .hos_engine import simulate_trip
 from .models import Trip
-from .routing import geocode, get_route
 from .serializers import (
     HealthCheckSerializer,
     TripCreateSerializer,
@@ -17,6 +15,7 @@ from .serializers import (
     TripOutputSerializer,
     TripSerializer,
 )
+from .services import TripPlanningService
 from .throttles import AuthThrottle, PlanRouteThrottle
 
 
@@ -57,56 +56,45 @@ class PlanRouteView(APIView):
         data = serializer.validated_data
 
         try:
-            # 1. Geocode all three locations
-            current_ll = geocode(data["current_location"])
-            pickup_ll = geocode(data["pickup_location"])
-            dropoff_ll = geocode(data["dropoff_location"])
-
-            # 2. Fetch route from OSRM
-            route = get_route(current_ll, pickup_ll, dropoff_ll)
-
-            leg1 = route["legs"][0]
-            leg2 = route["legs"][1]
-            total_miles = leg1["distance_miles"] + leg2["distance_miles"]
-
-            # 3. Run HOS simulation
-            logbook = simulate_trip(
-                total_distance_miles=total_miles,
-                leg1_hours=leg1["duration_hours"],
-                leg2_hours=leg2["duration_hours"],
-                current_cycle_used_hours=data["cycle_hours_used"],
-                leg1_miles=leg1["distance_miles"],
-                leg2_miles=leg2["distance_miles"],
-                from_location=data["current_location"],
-                to_location=data["dropoff_location"],
+            # Execute trip planning service
+            plan = TripPlanningService.plan_route(
+                current_location=data["current_location"],
+                pickup_location=data["pickup_location"],
+                dropoff_location=data["dropoff_location"],
+                cycle_hours_used=data["cycle_hours_used"],
             )
 
-            # 4. Build map markers
+            # Extract results
+            route_coordinates = plan["route_coordinates"]
+            total_miles = plan["total_miles"]
+            logbook = plan["logbook"]
+            locs = plan["locations"]
+
+            # Build map markers
             markers = [
                 {
-                    "lat": current_ll[0],
-                    "lon": current_ll[1],
+                    "lat": locs["current"]["ll"][0],
+                    "lon": locs["current"]["ll"][1],
                     "type": "start",
-                    "label": data["current_location"],
+                    "label": locs["current"]["name"],
                 },
                 {
-                    "lat": pickup_ll[0],
-                    "lon": pickup_ll[1],
+                    "lat": locs["pickup"]["ll"][0],
+                    "lon": locs["pickup"]["ll"][1],
                     "type": "pickup",
-                    "label": data["pickup_location"],
+                    "label": locs["pickup"]["name"],
                 },
                 {
-                    "lat": dropoff_ll[0],
-                    "lon": dropoff_ll[1],
+                    "lat": locs["dropoff"]["ll"][0],
+                    "lon": locs["dropoff"]["ll"][1],
                     "type": "dropoff",
-                    "label": data["dropoff_location"],
+                    "label": locs["dropoff"]["name"],
                 },
             ]
 
-            # 5. Derive rest/fuel stop map markers from logbook events
-            #    (approximate positions along route — spaced by event timing)
+            # Derive rest/fuel stop map markers from logbook events
             stop_markers = _build_stop_markers(
-                route["coordinates"],
+                route_coordinates,
                 logbook["logbook_days"],
                 logbook["total_trip_hours"],
             )
@@ -152,7 +140,7 @@ class PlanRouteView(APIView):
 
             return Response(
                 {
-                    "route_coordinates": route["coordinates"],
+                    "route_coordinates": route_coordinates,
                     "markers": markers,
                     "logbook_days": logbook_days_transformed,
                     "trip_summary": {
@@ -163,6 +151,7 @@ class PlanRouteView(APIView):
                         "rest_stops": logbook["num_rest_stops"],
                         "fuel_stops": logbook["num_fuel_stops"],
                     },
+                    "request_id": getattr(request, "request_id", None),
                 }
             )
 
