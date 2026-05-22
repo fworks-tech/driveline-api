@@ -63,8 +63,9 @@ def _validate_route(legs: list[dict]) -> None:
     leg1_miles = legs[0]["distance_miles"]
     leg2_miles = legs[1]["distance_miles"]
 
-    if leg1_miles < MIN_ROUTE_DISTANCE or leg2_miles < MIN_ROUTE_DISTANCE:
-        raise ValueError("Route legs must be at least 0.1 miles.")
+    # leg 0 (current→pickup) may be 0 when driver is already at pickup location
+    if leg2_miles < MIN_ROUTE_DISTANCE:
+        raise ValueError("Pickup to dropoff distance must be at least 0.1 miles.")
 
     total_miles = leg1_miles + leg2_miles
     if total_miles > MAX_ROUTE_DISTANCE:

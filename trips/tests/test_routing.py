@@ -212,7 +212,11 @@ class TestRouting(unittest.TestCase):
 
     @patch("trips.routing.requests.get")
     def test_get_route_rejects_minimal_distance(self, mock_get):
-        """Test that routes with near-zero legs are rejected."""
+        """Test that routes where pickup→dropoff leg is near-zero are rejected.
+
+        leg 0 (current→pickup) may legitimately be 0 when the driver is
+        already at the pickup location, so only leg 1 is validated.
+        """
         mock_response = MagicMock()
         mock_response.json.return_value = {
             "routes": [
@@ -221,8 +225,8 @@ class TestRouting(unittest.TestCase):
                         "coordinates": [[-87.6298, 41.8781], [-86.1581, 39.7684]]
                     },
                     "legs": [
-                        {"distance": 10, "duration": 60},  # < 0.1 miles
-                        {"distance": 160934, "duration": 3600},
+                        {"distance": 160934, "duration": 3600},  # leg 0 OK
+                        {"distance": 10, "duration": 60},  # leg 1 < 0.1 miles — invalid
                     ],
                 }
             ],
