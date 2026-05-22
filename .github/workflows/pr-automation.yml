@@ -3,6 +3,7 @@ name: Automate PR Configuration
 on:
   pull_request:
     types: [opened]
+  workflow_dispatch:
 
 jobs:
   configure-pr:
@@ -10,6 +11,7 @@ jobs:
     permissions:
       pull-requests: write
       issues: write
+    if: github.event_name == 'pull_request'
 
     steps:
       - name: Add labels based on issue type
