@@ -1,3 +1,5 @@
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from drf_spectacular.utils import extend_schema
 from requests.exceptions import RequestException, Timeout
 from rest_framework import status
@@ -223,6 +225,7 @@ def _build_stop_markers(
     return markers
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class TokenObtainView(APIView):
     """
     POST /api/v1/auth/token/
@@ -230,6 +233,7 @@ class TokenObtainView(APIView):
     Obtain JWT tokens using username and password.
     """
 
+    authentication_classes = []
     permission_classes = [AllowAny]
 
     @extend_schema(
@@ -264,6 +268,7 @@ class TokenObtainView(APIView):
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class UserRegistrationView(APIView):
     """
     POST /api/v1/auth/register/
@@ -271,6 +276,7 @@ class UserRegistrationView(APIView):
     Register a new user account.
     """
 
+    authentication_classes = []
     permission_classes = [AllowAny]
 
     @extend_schema(

@@ -1,0 +1,40 @@
+name: Runbook Validation
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'docs/**/*.md'
+      - 'README.md'
+      - '.env.example'
+      - '.github/workflows/runbook-validation.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'docs/**/*.md'
+      - 'README.md'
+      - '.env.example'
+
+jobs:
+  validate-runbooks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Run runbook validator
+        run: |
+          python scripts/validate_runbooks.py
+        shell: bash
+
+      - name: Report validation results
+        if: always()
+        run: |
+          echo "✅ Runbook validation complete"
+        shell: bash

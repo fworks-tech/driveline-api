@@ -231,7 +231,7 @@ def test_successful_route_planning_end_to_end(mock_geocode, mock_route):
     # Make API request
     client = Client()
     response = client.post(
-        '/api/plan-route/',
+        '/api/v1/plan-route/',
         data=json.dumps({
             'current_location': 'Chicago, IL',
             'pickup_location': 'Indianapolis, IN',
@@ -387,7 +387,7 @@ class TestMyFeature:
 
         # Act
         response = self.client.post(
-            '/api/plan-route/',
+            '/api/v1/plan-route/',
             data=json.dumps({...}),
             content_type='application/json',
         )

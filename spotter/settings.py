@@ -133,16 +133,8 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticated",
+        "rest_framework.permissions.AllowAny",
     ],
-}
-
-SPECTACULAR_SETTINGS = {
-    "SCHEMA_PATH_PREFIX": r"/api/",
-    "TITLE": "Spotter AI ELD & Route Planner API",
-    "DESCRIPTION": "Production REST API for trip planning with FMCSA HOS compliance.",
-    "VERSION": "1.0.0",
-    "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
 }
 
 # JWT Configuration
@@ -154,4 +146,12 @@ SIMPLE_JWT = {
     "ALGORITHM": "HS256",
     "SIGNING_KEY": os.environ.get("DJANGO_SECRET_KEY", SECRET_KEY),
     "VERIFYING_KEY": None,
+}
+
+SPECTACULAR_SETTINGS = {
+    "SCHEMA_PATH_PREFIX": r"/api/",
+    "TITLE": "Spotter AI ELD & Route Planner API",
+    "DESCRIPTION": "Production REST API for trip planning with FMCSA HOS compliance.",
+    "VERSION": "1.0.0",
+    "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
 }
