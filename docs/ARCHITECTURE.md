@@ -11,7 +11,7 @@
 ```
 ┌──────────────────────────────────────────────────────┐
 │              Frontend (React 19)                     │
-│         POST /api/v1/plan-route/                        │
+│         POST /api/plan-route/                        │
 └────────────────────┬─────────────────────────────────┘
                      │
                      ▼
@@ -88,7 +88,7 @@ spotter-eld-logging-api/
 
 ## 🔄 Request Flow Architecture
 
-### POST /api/v1/plan-route/ Flow
+### POST /api/plan-route/ Flow
 
 ```
 1. REQUEST RECEIVED (HTTP POST)
@@ -591,7 +591,7 @@ CORS_ALLOWED_ORIGINS=https://spotter-eld.app,https://staging-spotter.vercel.app
 When versioning becomes necessary:
 
 ```
-/api/v1/plan-route/     # v1.0.0-api and later
+/api/plan-route/     # v1.0.0-api and later
 /api/v2/plan-route/     # Future major version
 ```
 
@@ -988,7 +988,7 @@ LOGGING = {
 
 **Sample log:**
 ```
-[20/May/2026 14:36:22] "POST /api/v1/plan-route/ HTTP/1.1" 200 5234 (2345ms)
+[20/May/2026 14:36:22] "POST /api/plan-route/ HTTP/1.1" 200 5234 (2345ms)
 ```
 
 **Use APM tools (optional):**

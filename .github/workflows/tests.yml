@@ -157,7 +157,7 @@ jobs:
                   data = yaml.safe_load(f)
                   assert 'openapi' in data
                   assert 'paths' in data
-                  assert '/api/v1/plan-route/' in data['paths']
+                  assert '/api/plan-route/' in data['paths']
                   print('✓ OpenAPI schema is valid')
               except Exception as e:
                   print(f'✗ OpenAPI schema validation failed: {e}')

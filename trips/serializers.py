@@ -10,6 +10,16 @@ class TripInputSerializer(serializers.Serializer):
     pickup_location = serializers.CharField(min_length=2, max_length=500)
     dropoff_location = serializers.CharField(min_length=2, max_length=500)
     cycle_hours_used = serializers.FloatField(min_value=0, max_value=70)
+    trip_date = serializers.DateField(required=False, allow_null=True)
+    tractor_number = serializers.CharField(
+        max_length=50, required=False, allow_blank=True, default=""
+    )
+    trailer_number = serializers.CharField(
+        max_length=50, required=False, allow_blank=True, default=""
+    )
+    shipper_name = serializers.CharField(
+        max_length=255, required=False, allow_blank=True, default=""
+    )
 
 
 class MarkerSerializer(serializers.Serializer):
@@ -31,8 +41,14 @@ class LogbookEventSerializer(serializers.Serializer):
 class LogbookDaySerializer(serializers.Serializer):
     day = serializers.IntegerField()
     date_offset = serializers.IntegerField()
+    date = serializers.CharField(max_length=10)
+    from_location = serializers.CharField(max_length=255)
+    to_location = serializers.CharField(max_length=255)
+    daily_miles = serializers.FloatField()
+    cumulative_miles = serializers.FloatField()
     total_driving_hours = serializers.FloatField()
     total_on_duty_hours = serializers.FloatField()
+    row_totals = serializers.DictField()
     events = LogbookEventSerializer(many=True)
 
 
@@ -52,6 +68,10 @@ class TripOutputSerializer(serializers.Serializer):
     markers = MarkerSerializer(many=True)
     logbook_days = LogbookDaySerializer(many=True)
     trip_summary = TripSummarySerializer()
+
+
+class HealthCheckSerializer(serializers.Serializer):
+    status = serializers.CharField()
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -92,6 +112,10 @@ class TripSerializer(serializers.ModelSerializer):
             "pickup_location",
             "dropoff_location",
             "cycle_hours_used",
+            "trip_date",
+            "tractor_number",
+            "trailer_number",
+            "shipper_name",
             "route_coordinates",
             "markers",
             "logbook_days",
@@ -119,6 +143,8 @@ class TripListSerializer(serializers.ModelSerializer):
             "pickup_location",
             "dropoff_location",
             "cycle_hours_used",
+            "trip_date",
+            "tractor_number",
             "status",
             "created_at",
         ]
@@ -132,9 +158,21 @@ class TripCreateSerializer(serializers.Serializer):
     pickup_location = serializers.CharField(min_length=2, max_length=500)
     dropoff_location = serializers.CharField(min_length=2, max_length=500)
     cycle_hours_used = serializers.FloatField(min_value=0, max_value=70)
+    trip_date = serializers.DateField(required=False, allow_null=True)
+    tractor_number = serializers.CharField(
+        max_length=50, required=False, allow_blank=True, default=""
+    )
+    trailer_number = serializers.CharField(
+        max_length=50, required=False, allow_blank=True, default=""
+    )
+    shipper_name = serializers.CharField(
+        max_length=255, required=False, allow_blank=True, default=""
+    )
 
     def create(self, validated_data):
         """Create and save a new trip with calculated route data."""
+        from datetime import date as date_type
+
         from .hos_engine import simulate_trip
         from .routing import geocode, get_route
         from .views import _build_stop_markers
@@ -152,6 +190,9 @@ class TripCreateSerializer(serializers.Serializer):
             leg2 = route["legs"][1]
             total_miles = leg1["distance_miles"] + leg2["distance_miles"]
 
+            # Use provided trip_date or default to today
+            trip_date = data.get("trip_date") or date_type.today()
+
             # Run HOS simulation
             logbook = simulate_trip(
                 total_distance_miles=total_miles,
@@ -160,6 +201,7 @@ class TripCreateSerializer(serializers.Serializer):
                 current_cycle_used_hours=data["cycle_hours_used"],
                 leg1_miles=leg1["distance_miles"],
                 leg2_miles=leg2["distance_miles"],
+                start_date=trip_date,
                 from_location=data["current_location"],
                 to_location=data["dropoff_location"],
             )
@@ -236,6 +278,10 @@ class TripCreateSerializer(serializers.Serializer):
                 pickup_location=data["pickup_location"],
                 dropoff_location=data["dropoff_location"],
                 cycle_hours_used=data["cycle_hours_used"],
+                trip_date=trip_date,
+                tractor_number=data.get("tractor_number", ""),
+                trailer_number=data.get("trailer_number", ""),
+                shipper_name=data.get("shipper_name", ""),
                 route_coordinates=route["coordinates"],
                 markers=markers,
                 logbook_days=logbook_days_transformed,

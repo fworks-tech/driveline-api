@@ -10,6 +10,7 @@ from .hos_engine import simulate_trip
 from .models import Trip
 from .routing import geocode, get_route
 from .serializers import (
+    HealthCheckSerializer,
     TripCreateSerializer,
     TripInputSerializer,
     TripListSerializer,
@@ -24,6 +25,7 @@ class HealthCheckView(APIView):
 
     authentication_classes = []
     permission_classes = []
+    serializer_class = HealthCheckSerializer
 
     def get(self, request):
         return Response({"status": "ok"}, status=status.HTTP_200_OK)
@@ -373,6 +375,7 @@ class TripViewSet(viewsets.ModelViewSet):
     """
 
     permission_classes = [IsAuthenticated]
+    queryset = Trip.objects.all()
     serializer_class = TripSerializer
 
     def get_queryset(self):

@@ -11,9 +11,15 @@ class Trip(models.Model):
     current_location = models.CharField(max_length=255)
     pickup_location = models.CharField(max_length=255)
     dropoff_location = models.CharField(max_length=255)
-    cycle_hours_used = models.IntegerField(
+    cycle_hours_used = models.FloatField(
         default=0, help_text="Hours already used in current 70-hour cycle"
     )
+
+    # ELD log header metadata (FMCSA standard fields)
+    trip_date = models.DateField(null=True, blank=True)
+    tractor_number = models.CharField(max_length=50, blank=True, default="")
+    trailer_number = models.CharField(max_length=50, blank=True, default="")
+    shipper_name = models.CharField(max_length=255, blank=True, default="")
 
     # Trip outputs (JSON)
     route_coordinates = models.JSONField(default=list)
