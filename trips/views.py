@@ -11,6 +11,7 @@ from .error_handler import CircuitOpenError, GeocodingError, RoutingError
 from .hos_engine import simulate_trip
 from .routing import geocode, get_route
 from .serializers import TripInputSerializer, TripOutputSerializer
+from .throttles import AuthThrottle, PlanRouteThrottle
 
 
 class HealthCheckView(APIView):
@@ -35,6 +36,7 @@ class PlanRouteView(APIView):
 
     serializer_class = TripInputSerializer
     permission_classes = [AllowAny]
+    throttle_classes = [PlanRouteThrottle]
 
     @extend_schema(
         request=TripInputSerializer,
@@ -259,6 +261,7 @@ class TokenObtainView(APIView):
 
     authentication_classes = []
     permission_classes = [AllowAny]
+    throttle_classes = [AuthThrottle]
 
     @extend_schema(
         description="Obtain JWT access and refresh tokens",
@@ -302,6 +305,7 @@ class UserRegistrationView(APIView):
 
     authentication_classes = []
     permission_classes = [AllowAny]
+    throttle_classes = [AuthThrottle]
 
     @extend_schema(
         description="Register a new user account",
