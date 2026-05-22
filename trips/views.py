@@ -249,13 +249,13 @@ def _build_stop_markers(
     n = len(coordinates)
 
     for ev in all_events:
-        if ev["label"] not in ("Fuel Stop", "Rest (10-hr Reset)"):
+        marker_type = ev.get("marker_type")
+        if not marker_type:
             continue
         fraction = ev["abs_start"] / total_trip_hours
         fraction = max(0.0, min(1.0, fraction))
         idx = int(fraction * (n - 1))
         lon, lat = coordinates[idx]
-        marker_type = "fuel" if ev["label"] == "Fuel Stop" else "rest"
         markers.append(
             {
                 "lat": lat,

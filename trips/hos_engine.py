@@ -118,20 +118,27 @@ def simulate_trip(
 
     # ------------------------------------------------------------------ helpers
 
-    def add_event(status: str, duration: float, label: str, location: str = "") -> None:
+    def add_event(
+        status: str,
+        duration: float,
+        label: str,
+        location: str = "",
+        marker_type: str = "",
+    ) -> None:
         nonlocal current_time
         if duration <= 0:
             return
-        events.append(
-            {
-                "status": status,
-                "start_hour": round(current_time, 4),
-                "end_hour": round(current_time + duration, 4),
-                "duration_hours": round(duration, 4),
-                "label": label,
-                "location": location,
-            }
-        )
+        event = {
+            "status": status,
+            "start_hour": round(current_time, 4),
+            "end_hour": round(current_time + duration, 4),
+            "duration_hours": round(duration, 4),
+            "label": label,
+            "location": location,
+        }
+        if marker_type:
+            event["marker_type"] = marker_type
+        events.append(event)
         current_time += duration
 
     def start_shift_if_needed() -> None:
@@ -163,7 +170,7 @@ def simulate_trip(
 
     def do_rest(label: str = "Rest (10-hr Reset)") -> None:
         """Insert a 10-hour sleeper-berth rest and reset shift counters."""
-        add_event("SLEEPER_BERTH", REST_DURATION, label)
+        add_event("SLEEPER_BERTH", REST_DURATION, label, marker_type="rest")
         state["shift_drive"] = 0.0
         state["shift_on_duty"] = 0.0
         state["shift_start"] = None
@@ -180,7 +187,7 @@ def simulate_trip(
     def do_fuel(label: str = "Fuel Stop") -> None:
         """Insert a 30-minute on-duty fuel stop."""
         start_shift_if_needed()
-        add_event("ON_DUTY_ND", FUEL_STOP_HOURS, label)
+        add_event("ON_DUTY_ND", FUEL_STOP_HOURS, label, marker_type="fuel")
         state["shift_on_duty"] += FUEL_STOP_HOURS
         state["cycle_hours"] += FUEL_STOP_HOURS
         state["miles_since_fuel"] = 0.0
