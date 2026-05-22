@@ -14,17 +14,25 @@ from trips.error_handler import (
     with_retry,
 )
 
-NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
-OSRM_URL = "https://router.project-osrm.org/route/v1/driving"
+NOMINATIM_URL = os.environ.get(
+    "NOMINATIM_URL", "https://nominatim.openstreetmap.org/search"
+)
+OSRM_URL = os.environ.get(
+    "OSRM_URL", "https://router.project-osrm.org/route/v1/driving"
+)
 
 # User-Agent for external API requests (avoid personal email)
 USER_AGENT = os.environ.get(
     "API_USER_AGENT", "SpotterELD/1.0 (support@spotter-eld.app)"
 )
 
+# API Request timeouts (seconds)
+NOMINATIM_TIMEOUT = int(os.environ.get("NOMINATIM_TIMEOUT", "10"))
+OSRM_TIMEOUT = int(os.environ.get("OSRM_TIMEOUT", "30"))
+
 # Cache TTL in seconds (24 hours for geocoding, 48 hours for routes)
-GEOCODE_CACHE_TIMEOUT = 86400
-ROUTE_CACHE_TIMEOUT = 172800
+GEOCODE_CACHE_TIMEOUT = int(os.environ.get("GEOCODE_CACHE_TIMEOUT", "86400"))
+ROUTE_CACHE_TIMEOUT = int(os.environ.get("ROUTE_CACHE_TIMEOUT", "172800"))
 
 
 def _make_cache_key(prefix: str, *args, **kwargs) -> str:
@@ -65,7 +73,7 @@ def _geocode_call(address: str) -> tuple[float, float]:
         NOMINATIM_URL,
         params={"q": address, "format": "json", "limit": 1},
         headers={"User-Agent": USER_AGENT},
-        timeout=10,
+        timeout=NOMINATIM_TIMEOUT,
     )
     resp.raise_for_status()
     data = resp.json()
@@ -109,7 +117,7 @@ def _get_route_call(
     resp = requests.get(
         f"{OSRM_URL}/{coords_str}",
         params={"overview": "full", "geometries": "geojson", "steps": "false"},
-        timeout=30,
+        timeout=OSRM_TIMEOUT,
     )
     resp.raise_for_status()
     data = resp.json()

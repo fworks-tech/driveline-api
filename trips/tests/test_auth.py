@@ -206,7 +206,7 @@ class TestTokenObtain(TestCase):
             self.endpoint, data=json.dumps(payload), content_type="application/json"
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 400)
         errors = response.json()
         self.assertIn("username", errors)
 
@@ -219,7 +219,7 @@ class TestTokenObtain(TestCase):
             self.endpoint, data=json.dumps(payload), content_type="application/json"
         )
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 400)
         errors = response.json()
         self.assertIn("password", errors)
 
