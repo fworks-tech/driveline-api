@@ -67,6 +67,8 @@ class PlanRouteView(APIView):
                 current_cycle_used_hours=data["cycle_hours_used"],
                 leg1_miles=leg1["distance_miles"],
                 leg2_miles=leg2["distance_miles"],
+                from_location=data["current_location"],
+                to_location=data["dropoff_location"],
             )
 
             # 4. Build map markers
@@ -126,8 +128,14 @@ class PlanRouteView(APIView):
                     {
                         "day": day["day"],
                         "date_offset": day["date_offset"],
+                        "date": day["date"],
+                        "from_location": day["from_location"],
+                        "to_location": day["to_location"],
+                        "daily_miles": day["daily_miles"],
+                        "cumulative_miles": day["cumulative_miles"],
                         "total_driving_hours": day["total_driving_hours"],
                         "total_on_duty_hours": day["total_on_duty_hours"],
+                        "row_totals": day["row_totals"],
                         "events": events_transformed,
                     }
                 )

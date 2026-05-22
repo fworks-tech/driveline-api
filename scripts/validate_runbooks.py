@@ -13,11 +13,11 @@ Usage:
     python scripts/validate_runbooks.py docs/LOCAL_DEVELOPMENT.md  # Validate specific file
 """
 
-import os
 import re
 import sys
 from pathlib import Path
 from typing import List, Set
+
 
 class RunbookValidator:
     """Validates documentation runbooks for correctness and consistency."""
@@ -37,11 +37,11 @@ class RunbookValidator:
             self.warnings.append(f"⚠️  .env.example not found at {env_file}")
             return
 
-        with open(env_file, 'r') as f:
+        with open(env_file, "r") as f:
             for line in f:
                 line = line.strip()
-                if line and not line.startswith('#') and '=' in line:
-                    var_name = line.split('=')[0].strip()
+                if line and not line.startswith("#") and "=" in line:
+                    var_name = line.split("=")[0].strip()
                     self.env_vars.add(var_name)
 
     def validate_file(self, filepath: Path) -> bool:
@@ -50,7 +50,7 @@ class RunbookValidator:
             self.errors.append(f"❌ File not found: {filepath}")
             return False
 
-        with open(filepath, 'r') as f:
+        with open(filepath, "r") as f:
             content = f.read()
 
         self._validate_file_paths(content, filepath)
@@ -63,16 +63,16 @@ class RunbookValidator:
         """Validate file paths mentioned in the runbook."""
         # Remove code blocks from content to avoid validating paths within directory trees
         # Split by ``` and only process non-code sections
-        parts = content.split('```')
-        content_without_code = ''.join(parts[i] for i in range(0, len(parts), 2))
+        parts = content.split("```")
+        content_without_code = "".join(parts[i] for i in range(0, len(parts), 2))
 
         patterns = [
-            r'`([a-zA-Z0-9._\/-]+\.md)`',
-            r'`([a-zA-Z0-9._\/-]+\.py)`',
-            r'`([a-zA-Z0-9._\/-]+\.txt)`',
-            r'`([a-zA-Z0-9._\/-]+\.json)`',
-            r'`([a-zA-Z0-9._\/-]+\.yaml)`',
-            r'`([a-zA-Z0-9._\/-]+\.yml)`',
+            r"`([a-zA-Z0-9._\/-]+\.md)`",
+            r"`([a-zA-Z0-9._\/-]+\.py)`",
+            r"`([a-zA-Z0-9._\/-]+\.txt)`",
+            r"`([a-zA-Z0-9._\/-]+\.json)`",
+            r"`([a-zA-Z0-9._\/-]+\.yaml)`",
+            r"`([a-zA-Z0-9._\/-]+\.yml)`",
         ]
 
         found_paths: Set[str] = set()
@@ -84,7 +84,7 @@ class RunbookValidator:
         for path_str in found_paths:
             full_path = self.repo_root / path_str
 
-            if path_str.startswith(('http://', 'https://', '$', '${', '{{')):
+            if path_str.startswith(("http://", "https://", "$", "${", "{{")):
                 continue
 
             if not full_path.exists():
@@ -95,9 +95,9 @@ class RunbookValidator:
     def _validate_env_vars(self, content: str, filepath: Path):
         """Validate environment variables are documented in .env.example."""
         patterns = [
-            r'\$\{([A-Z_][A-Z0-9_]*)\}',
-            r'\$([A-Z_][A-Z0-9_]*)\b',
-            r'env:([A-Z_][A-Z0-9_]*)',
+            r"\$\{([A-Z_][A-Z0-9_]*)\}",
+            r"\$([A-Z_][A-Z0-9_]*)\b",
+            r"env:([A-Z_][A-Z0-9_]*)",
         ]
 
         found_vars: Set[str] = set()
@@ -108,12 +108,25 @@ class RunbookValidator:
 
         # Exempt vars that are not environment variables
         exempt_vars = {
-            'HOME', 'PATH', 'USER', 'PWD', 'SHELL', 'LANG',
-            'VITE_API_URL',
+            "HOME",
+            "PATH",
+            "USER",
+            "PWD",
+            "SHELL",
+            "LANG",
+            "VITE_API_URL",
             # FMCSA duty status enums (not env vars)
-            'DRIVING', 'OFF_DUTY', 'ON_DUTY_ND', 'SLEEPER', 'SLEEPER_BERTH',
+            "DRIVING",
+            "OFF_DUTY",
+            "ON_DUTY_ND",
+            "SLEEPER",
+            "SLEEPER_BERTH",
             # HTTP methods (not env vars)
-            'POST', 'GET', 'PUT', 'DELETE', 'PATCH',
+            "POST",
+            "GET",
+            "PUT",
+            "DELETE",
+            "PATCH",
         }
 
         for var in found_vars:
@@ -127,7 +140,7 @@ class RunbookValidator:
 
     def _validate_code_blocks(self, content: str, filepath: Path):
         """Validate code blocks are properly formatted."""
-        code_block_pattern = r'```'
+        code_block_pattern = r"```"
         matches = list(re.finditer(code_block_pattern, content))
 
         if len(matches) % 2 != 0:
@@ -167,13 +180,13 @@ class RunbookValidator:
 def find_runbooks(repo_root: Path) -> List[Path]:
     """Find all markdown runbook files in the repo."""
     runbook_patterns = [
-        'docs/LOCAL_DEVELOPMENT.md',
-        'docs/TESTING.md',
-        'docs/ARCHITECTURE.md',
-        'docs/API_CONTRACT.md',
-        'docs/HOS_ENGINE.md',
-        'docs/FRONTEND_INTEGRATION.md',
-        'README.md',
+        "docs/LOCAL_DEVELOPMENT.md",
+        "docs/TESTING.md",
+        "docs/ARCHITECTURE.md",
+        "docs/API_CONTRACT.md",
+        "docs/HOS_ENGINE.md",
+        "docs/FRONTEND_INTEGRATION.md",
+        "README.md",
     ]
 
     runbooks = []
@@ -207,15 +220,13 @@ def main():
 
     validator = RunbookValidator(repo_root)
 
-    all_valid = True
     for filepath in target_files:
         print(f"Checking: {filepath.relative_to(repo_root)}")
-        if not validator.validate_file(filepath):
-            all_valid = False
+        validator.validate_file(filepath)
 
     exit_code = validator.report()
     return exit_code
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())
