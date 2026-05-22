@@ -148,7 +148,7 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
-  /api/v1/auth/register/:
+  /api/auth/register/:
     post:
       operationId: v1_auth_register_create
       description: Register a new user account
@@ -188,7 +188,7 @@ paths:
                   email:
                     type: string
           description: ''
-  /api/v1/auth/token/:
+  /api/auth/token/:
     post:
       operationId: v1_auth_token_create
       description: Obtain JWT access and refresh tokens
@@ -223,7 +223,7 @@ paths:
                     type: string
                     description: JWT refresh token
           description: ''
-  /api/v1/health/:
+  /api/health/:
     get:
       operationId: v1_health_retrieve
       description: Simple liveness endpoint for container and deployment health checks.
@@ -232,11 +232,11 @@ paths:
       responses:
         '200':
           description: No response body
-  /api/v1/plan-route/:
+  /api/plan-route/:
     post:
       operationId: v1_plan_route_create
       description: |-
-        POST /api/v1/plan-route/
+        POST /api/plan-route/
 
         Accepts trip details, geocodes locations, fetches route from OSRM,
         runs HOS simulation, and returns full trip data.
