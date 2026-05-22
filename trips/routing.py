@@ -34,6 +34,10 @@ OSRM_TIMEOUT = int(os.environ.get("OSRM_TIMEOUT", "30"))
 GEOCODE_CACHE_TIMEOUT = int(os.environ.get("GEOCODE_CACHE_TIMEOUT", "86400"))
 ROUTE_CACHE_TIMEOUT = int(os.environ.get("ROUTE_CACHE_TIMEOUT", "172800"))
 
+# Route distance limits (miles)
+MIN_ROUTE_DISTANCE = 0.1
+MAX_ROUTE_DISTANCE = 10000
+
 
 def _make_cache_key(prefix: str, *args, **kwargs) -> str:
     """Generate a cache key from function arguments (memcached-safe)."""
@@ -44,6 +48,30 @@ def _make_cache_key(prefix: str, *args, **kwargs) -> str:
     combined = f"{args_key}{kwargs_key}"
     hash_val = hashlib.md5(combined.encode()).hexdigest()
     return f"{prefix}_{hash_val}"
+
+
+def _validate_route(legs: list[dict]) -> None:
+    """Validate route legs for distance sanity and sequence.
+
+    Raises ValueError if route appears invalid or suspicious.
+    """
+    if not legs or len(legs) != 2:
+        raise ValueError(
+            "Route must have exactly 2 legs (origin→waypoint→destination)."
+        )
+
+    leg1_miles = legs[0]["distance_miles"]
+    leg2_miles = legs[1]["distance_miles"]
+
+    if leg1_miles < MIN_ROUTE_DISTANCE or leg2_miles < MIN_ROUTE_DISTANCE:
+        raise ValueError("Route legs must be at least 0.1 miles.")
+
+    total_miles = leg1_miles + leg2_miles
+    if total_miles > MAX_ROUTE_DISTANCE:
+        raise ValueError(
+            f"Route distance {total_miles:.1f} miles exceeds maximum "
+            f"of {MAX_ROUTE_DISTANCE} miles. Check location input."
+        )
 
 
 def _cached_api_call(timeout: int, key_prefix: str):
@@ -135,6 +163,7 @@ def _get_route_call(
             }
         )
 
+    _validate_route(legs)
     coordinates = route["geometry"]["coordinates"]
     return {"coordinates": coordinates, "legs": legs}
 

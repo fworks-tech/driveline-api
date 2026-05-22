@@ -145,6 +145,10 @@ class TestRouting(unittest.TestCase):
                             "distance": 160934,
                             "duration": 36000,
                         },  # meters (100 miles), seconds (10 hours)
+                        {
+                            "distance": 160934,
+                            "duration": 36000,
+                        },  # second leg
                     ],
                 }
             ],
@@ -170,6 +174,7 @@ class TestRouting(unittest.TestCase):
                     },
                     "legs": [
                         {"distance": 160934, "duration": 36000},  # 10 hours in seconds
+                        {"distance": 160934, "duration": 36000},  # second leg
                     ],
                 }
             ],
@@ -181,3 +186,71 @@ class TestRouting(unittest.TestCase):
 
         assert result is not None
         assert abs(result["legs"][0]["duration_hours"] - 10.0) < 0.01
+
+    @patch("trips.routing.requests.get")
+    def test_get_route_rejects_excessive_distance(self, mock_get):
+        """Test that routes exceeding max distance are rejected."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "routes": [
+                {
+                    "geometry": {
+                        "coordinates": [[-87.6298, 41.8781], [-86.1581, 39.7684]]
+                    },
+                    "legs": [
+                        {"distance": 16093400, "duration": 3600},  # 10000+ miles
+                        {"distance": 16093400, "duration": 3600},
+                    ],
+                }
+            ],
+            "code": "Ok",
+        }
+        mock_get.return_value = mock_response
+
+        with self.assertRaises(RoutingError):
+            get_route((41.8781, -87.6298), (40.0, -86.0), (39.7684, -86.1581))
+
+    @patch("trips.routing.requests.get")
+    def test_get_route_rejects_minimal_distance(self, mock_get):
+        """Test that routes with near-zero legs are rejected."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "routes": [
+                {
+                    "geometry": {
+                        "coordinates": [[-87.6298, 41.8781], [-86.1581, 39.7684]]
+                    },
+                    "legs": [
+                        {"distance": 10, "duration": 60},  # < 0.1 miles
+                        {"distance": 160934, "duration": 3600},
+                    ],
+                }
+            ],
+            "code": "Ok",
+        }
+        mock_get.return_value = mock_response
+
+        with self.assertRaises(RoutingError):
+            get_route((41.8781, -87.6298), (40.0, -86.0), (39.7684, -86.1581))
+
+    @patch("trips.routing.requests.get")
+    def test_get_route_rejects_wrong_leg_count(self, mock_get):
+        """Test that routes with != 2 legs are rejected."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "routes": [
+                {
+                    "geometry": {
+                        "coordinates": [[-87.6298, 41.8781], [-86.1581, 39.7684]]
+                    },
+                    "legs": [
+                        {"distance": 160934, "duration": 3600},  # Only 1 leg
+                    ],
+                }
+            ],
+            "code": "Ok",
+        }
+        mock_get.return_value = mock_response
+
+        with self.assertRaises(RoutingError):
+            get_route((41.8781, -87.6298), (40.0, -86.0), (39.7684, -86.1581))
