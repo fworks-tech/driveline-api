@@ -73,6 +73,9 @@ isort .
 # Lint
 flake8 . --exclude migrations/ --max-line-length=120
 
+# Validate runbook docs quality
+python scripts/validate_runbooks.py
+
 # Django system checks
 python manage.py check
 ```
