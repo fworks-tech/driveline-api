@@ -1,14 +1,21 @@
 from drf_spectacular.utils import extend_schema
 from requests.exceptions import RequestException, Timeout
-from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework import status, viewsets
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .error_handler import CircuitOpenError, GeocodingError, RoutingError
 from .hos_engine import simulate_trip
+from .models import Trip
 from .routing import geocode, get_route
-from .serializers import TripInputSerializer, TripOutputSerializer
+from .serializers import (
+    TripCreateSerializer,
+    TripInputSerializer,
+    TripListSerializer,
+    TripOutputSerializer,
+    TripSerializer,
+)
 from .throttles import AuthThrottle, PlanRouteThrottle
 
 
@@ -351,3 +358,46 @@ class UserRegistrationView(APIView):
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+class TripViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for CRUD operations on user trips.
+
+    Endpoints:
+    - GET /api/trips/ - List user's trips (paginated)
+    - POST /api/trips/ - Create new trip
+    - GET /api/trips/{id}/ - Retrieve trip
+    - PUT /api/trips/{id}/ - Update trip
+    - DELETE /api/trips/{id}/ - Delete trip
+    """
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = TripSerializer
+
+    def get_queryset(self):
+        """Return only trips owned by the current user."""
+        return Trip.objects.filter(user=self.request.user)
+
+    def get_serializer_class(self):
+        """Use different serializers for different actions."""
+        if self.action == "create":
+            return TripCreateSerializer
+        elif self.action == "list":
+            return TripListSerializer
+        return TripSerializer
+
+    def create(self, request, *args, **kwargs):
+        """Create a new trip from form input and return full trip data."""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        trip = serializer.save()
+
+        # Return full trip data in response
+        output_serializer = TripSerializer(trip, context={"request": request})
+        return Response(output_serializer.data, status=status.HTTP_201_CREATED)
+
+    def perform_destroy(self, instance):
+        """Soft-delete by archiving trip (can be changed to hard delete)."""
+        instance.status = "archived"
+        instance.save()
