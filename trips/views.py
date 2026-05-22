@@ -7,6 +7,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .error_handler import CircuitOpenError, GeocodingError, RoutingError
 from .hos_engine import simulate_trip
 from .routing import geocode, get_route
 from .serializers import TripInputSerializer, TripOutputSerializer
@@ -156,6 +157,21 @@ class PlanRouteView(APIView):
                 }
             )
 
+        except CircuitOpenError as exc:
+            return Response(
+                {"error": "service_unavailable", "detail": exc.detail},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        except GeocodingError as exc:
+            return Response(
+                {"error": "geocoding_failed", "detail": exc.detail},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+        except RoutingError as exc:
+            return Response(
+                {"error": "routing_failed", "detail": exc.detail},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
         except ValueError as exc:
             return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         except Timeout:

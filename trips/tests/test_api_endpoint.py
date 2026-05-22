@@ -5,6 +5,8 @@ from django.core.cache import cache
 from django.test import Client, TestCase
 from requests.exceptions import ConnectTimeout, ReadTimeout
 
+from trips.error_handler import GeocodingError
+
 
 class TestPlanRouteAPI(TestCase):
     """Integration tests for POST /api/v1/plan-route/ endpoint."""
@@ -107,8 +109,8 @@ class TestPlanRouteAPI(TestCase):
 
     @patch("trips.routing.geocode")
     def test_invalid_current_location(self, mock_geocode):
-        """Test request with invalid current location."""
-        mock_geocode.return_value = None  # Location not found
+        """Test request with invalid current location raises GeocodingError."""
+        mock_geocode.side_effect = GeocodingError("Geocoding failed", "Invalid address")
 
         response = self.client.post(
             self.endpoint,
@@ -123,7 +125,8 @@ class TestPlanRouteAPI(TestCase):
             content_type="application/json",
         )
 
-        assert response.status_code == 400
+        assert response.status_code == 502
+        assert response.json()["error"] == "geocoding_failed"
 
     def test_missing_required_field(self):
         """Test request missing required field."""
@@ -330,10 +333,10 @@ class TestPlanRouteAPI(TestCase):
             content_type="application/json",
         )
 
-        # HTTPError should return 502
+        # HTTPError on routing should return 502 with routing_failed error
         assert response.status_code == 502
         data = response.json()
-        assert data["error"] == "upstream_error"
+        assert data["error"] == "routing_failed"
 
 
 class TestHealthCheckAPI(TestCase):
