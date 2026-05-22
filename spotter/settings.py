@@ -3,9 +3,21 @@ from datetime import timedelta
 from pathlib import Path
 from urllib.parse import urlparse
 
+import sentry_sdk
 from dotenv import load_dotenv
 
 load_dotenv()
+
+SENTRY_DSN = os.environ.get("SENTRY_DSN", "")
+if SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        traces_sample_rate=float(
+            os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0.1")
+        ),
+        environment=os.environ.get("DJANGO_ENV", "development"),
+        send_default_pii=False,
+    )
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -73,6 +85,7 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "trips.middleware.RequestLoggingMiddleware",
     "trips.middleware.ErrorHandlingMiddleware",
 ]
 
@@ -140,6 +153,44 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "plan_route": "60/min",
         "auth": "30/min",
+    },
+}
+
+# Logging Configuration
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "json": {
+            "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+            "format": "%(asctime)s %(name)s %(levelname)s %(message)s",
+        },
+        "verbose": {
+            "format": "{asctime} {levelname} {name} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "json" if not DEBUG else "verbose",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "trips": {
+            "handlers": ["console"],
+            "level": "DEBUG" if DEBUG else "INFO",
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
+        },
     },
 }
 
