@@ -159,6 +159,7 @@ REST_FRAMEWORK = {
     },
 }
 
+
 # Logging Configuration
 class RequestIdFilter(logging.Filter):
     """Inject request_id from contextvars into log records."""
