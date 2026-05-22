@@ -5,6 +5,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-05-22
+
+### Added
+- Makefile with convenience targets: `install`, `dev`, `migrate`, `makemigrations`, `test`, `test-cov`, `lint`, `shell`, `docker-up`, `docker-down`, `docker-build`, `docker-logs`
+
+### Fixed
+- `_validate_route` no longer rejects routes where `current_location == pickup_location` (leg 0 zero-distance is valid when driver is already at pickup)
+- Geocode proxy endpoint added to avoid CORS issues on frontend (`GET /api/geocode/`)
+
+### Infrastructure
+- Git attributes enforce LF line endings for shell scripts
+
+## [1.3.1] - 2026-05-22
+
+### Fixed
+- Circuit breaker error handling for state transitions (get_state defaults to CLOSED on cache failure)
+
+## [1.3.0] - 2026-05-22
+
+### Added
+- Request correlation IDs propagated through logs for tracing
+- Supabase PostgreSQL connection for production database
+- Service layer extraction for geocoding and routing
+
+### Fixed
+- Security hardening: ALLOWED_HOSTS, sanitized error messages, request IDs
+- Stop marker rendering decoupled from hardcoded label strings
+
+## [1.2.0] - 2026-05-22
+
+### Added
+- Rate limiting: 60 req/min on plan-route, 30 req/min on auth endpoints
+- Structured request logging middleware with JSON output in production
+- Sentry integration for error tracking
+- Security hardening (ALLOWED_HOSTS, sanitized errors, CSRF cleanup)
+
+## [1.1.0] - 2026-05-22
+
+### Added
+- JWT authentication (register + token endpoints)
+- Trip CRUD endpoints with per-user data isolation
+- Caching layer for geocode and route results
+- Circuit breaker pattern for Nominatim and OSRM
+
+## [1.0.0] - 2026-05-20
+
+### Added
+- Initial production release — HOS engine, ELD logbook generation, OSRM routing, Nominatim geocoding
+
 ## [1.0.0-alpha-api] - 2026-05-19
 
 ### Added
