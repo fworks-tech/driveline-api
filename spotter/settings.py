@@ -20,12 +20,15 @@ if SENTRY_DSN:
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get(
-    "DJANGO_SECRET_KEY",
-    "django-insecure-spotter-eld-dev-key-change-in-production-xyz123",
-)
+_secret = os.environ.get("DJANGO_SECRET_KEY")
+if not _secret:
+    if os.environ.get("DEBUG", "False") != "True":
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured("DJANGO_SECRET_KEY environment variable is required in production")
+    _secret = "django-insecure-spotter-eld-dev-key-change-in-production-xyz123"
+SECRET_KEY = _secret
 
-DEBUG = os.environ.get("DEBUG", "True") == "True"
+DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -220,7 +223,7 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
-    "BLACKLIST_AFTER_ROTATION": True,
+    "BLACKLIST_AFTER_ROTATION": False,
     "ALGORITHM": "HS256",
     "SIGNING_KEY": os.environ.get("DJANGO_SECRET_KEY", SECRET_KEY),
     "VERIFYING_KEY": None,

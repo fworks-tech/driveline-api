@@ -34,6 +34,11 @@ MAX_CYCLE_HOURS = 70.0
 HOS_CACHE_TIMEOUT = 86400
 
 
+def _snap_to_15min(hour: float) -> float:
+    """Snap hour value to nearest 15-minute increment (0.25-hour intervals)."""
+    return round(hour * 4) / 4
+
+
 def _make_hos_cache_key(
     total_distance_miles: float,
     leg1_hours: float,
@@ -41,6 +46,7 @@ def _make_hos_cache_key(
     current_cycle_used_hours: float,
     leg1_miles: float,
     leg2_miles: float,
+    start_date: date | None = None,
 ) -> str:
     """Generate cache key for HOS simulation parameters (memcached-safe)."""
     import hashlib
@@ -52,6 +58,7 @@ def _make_hos_cache_key(
         "current_cycle_used_hours": current_cycle_used_hours,
         "leg1_miles": leg1_miles,
         "leg2_miles": leg2_miles,
+        "start_date": start_date.isoformat() if start_date else None,
     }
     params_json = json.dumps(params, sort_keys=True)
     hash_val = hashlib.md5(params_json.encode()).hexdigest()
@@ -90,6 +97,7 @@ def simulate_trip(
         current_cycle_used_hours,
         leg1_miles,
         leg2_miles,
+        start_date,
     )
     cached_result = cache.get(cache_key)
     if cached_result is not None:
@@ -200,8 +208,11 @@ def simulate_trip(
         """
         remaining_hours = hours
         remaining_miles = miles
+        max_iterations = 1000  # Prevent infinite loops
 
-        while remaining_hours > 0.001:
+        iterations = 0
+        while remaining_hours > 0.001 and iterations < max_iterations:
+            iterations += 1
             # --- Check if rest is immediately required ---
             if (
                 state["cycle_hours"] >= MAX_CYCLE_HOURS
@@ -337,15 +348,19 @@ def simulate_trip(
                 continue
 
             duration = seg_end - seg_start
+            snapped_start = _snap_to_15min(seg_start - day_start)
+            snapped_end = _snap_to_15min(seg_end - day_start)
+            snapped_duration = snapped_end - snapped_start
             clipped = {
                 "status": ev["status"],
-                "start_hour": round(seg_start - day_start, 4),
-                "end_hour": round(seg_end - day_start, 4),
-                "duration_hours": round(duration, 4),
+                "start_hour": snapped_start,
+                "end_hour": snapped_end,
+                "duration_hours": max(0.0, snapped_duration),
                 "label": ev["label"],
                 "location": ev.get("location", ""),
             }
-            day_events.append(clipped)
+            if snapped_duration > 0:
+                day_events.append(clipped)
 
             if ev["status"] == "DRIVING":
                 day_drive += duration
@@ -369,12 +384,15 @@ def simulate_trip(
         for ev in sorted(day_events, key=lambda e: e["start_hour"]):
             if ev["start_hour"] > cursor + 0.001:
                 gap_duration = ev["start_hour"] - cursor
+                snapped_end = _snap_to_15min(ev["start_hour"])
                 day_events_filled.append(
                     {
                         "status": "OFF_DUTY",
-                        "start_hour": round(cursor, 4),
-                        "end_hour": round(ev["start_hour"], 4),
-                        "duration_hours": round(gap_duration, 4),
+                        "start_hour": _snap_to_15min(cursor),
+                        "end_hour": snapped_end,
+                        "duration_hours": round(
+                            snapped_end - _snap_to_15min(cursor), 4
+                        ),
                         "label": "Off Duty",
                         "location": "",
                     }
@@ -385,12 +403,13 @@ def simulate_trip(
 
         if cursor < 24.0 - 0.001:
             gap_duration = 24.0 - cursor
+            snapped_cursor = _snap_to_15min(cursor)
             day_events_filled.append(
                 {
                     "status": "OFF_DUTY",
-                    "start_hour": round(cursor, 4),
+                    "start_hour": snapped_cursor,
                     "end_hour": 24.0,
-                    "duration_hours": round(gap_duration, 4),
+                    "duration_hours": round(24.0 - snapped_cursor, 4),
                     "label": "Off Duty",
                     "location": "",
                 }
