@@ -173,62 +173,52 @@ class TripCreateSerializer(serializers.Serializer):
         """Create and save a new trip with calculated route data."""
         from datetime import date as date_type
 
-        from .hos_engine import simulate_trip
-        from .routing import geocode, get_route
+        from .services import TripPlanningService
         from .views import _build_stop_markers
 
         data = validated_data
         try:
-            # Geocode locations
-            current_ll = geocode(data["current_location"])
-            pickup_ll = geocode(data["pickup_location"])
-            dropoff_ll = geocode(data["dropoff_location"])
-
-            # Fetch route
-            route = get_route(current_ll, pickup_ll, dropoff_ll)
-            leg1 = route["legs"][0]
-            leg2 = route["legs"][1]
-            total_miles = leg1["distance_miles"] + leg2["distance_miles"]
-
             # Use provided trip_date or default to today
             trip_date = data.get("trip_date") or date_type.today()
 
-            # Run HOS simulation
-            logbook = simulate_trip(
-                total_distance_miles=total_miles,
-                leg1_hours=leg1["duration_hours"],
-                leg2_hours=leg2["duration_hours"],
-                current_cycle_used_hours=data["cycle_hours_used"],
-                leg1_miles=leg1["distance_miles"],
-                leg2_miles=leg2["distance_miles"],
+            # Execute trip planning service
+            plan = TripPlanningService.plan_route(
+                current_location=data["current_location"],
+                pickup_location=data["pickup_location"],
+                dropoff_location=data["dropoff_location"],
+                cycle_hours_used=data["cycle_hours_used"],
                 start_date=trip_date,
-                from_location=data["current_location"],
-                to_location=data["dropoff_location"],
             )
+
+            # Extract results
+            route_coordinates = plan["route_coordinates"]
+            total_miles = plan["total_miles"]
+            logbook = plan["logbook"]
+            locs = plan["locations"]
 
             # Build markers
             markers = [
                 {
-                    "lat": current_ll[0],
-                    "lon": current_ll[1],
+                    "lat": locs["current"]["ll"][0],
+                    "lon": locs["current"]["ll"][1],
                     "type": "start",
-                    "label": data["current_location"],
+                    "label": locs["current"]["name"],
                 },
                 {
-                    "lat": pickup_ll[0],
-                    "lon": pickup_ll[1],
+                    "lat": locs["pickup"]["ll"][0],
+                    "lon": locs["pickup"]["ll"][1],
                     "type": "pickup",
-                    "label": data["pickup_location"],
+                    "label": locs["pickup"]["name"],
                 },
                 {
-                    "lat": dropoff_ll[0],
-                    "lon": dropoff_ll[1],
+                    "lat": locs["dropoff"]["ll"][0],
+                    "lon": locs["dropoff"]["ll"][1],
                     "type": "dropoff",
-                    "label": data["dropoff_location"],
+                    "label": locs["dropoff"]["name"],
                 },
             ]
             stop_markers = _build_stop_markers(
-                route["coordinates"],
+                route_coordinates,
                 logbook["logbook_days"],
                 logbook["total_trip_hours"],
             )
@@ -282,7 +272,7 @@ class TripCreateSerializer(serializers.Serializer):
                 tractor_number=data.get("tractor_number", ""),
                 trailer_number=data.get("trailer_number", ""),
                 shipper_name=data.get("shipper_name", ""),
-                route_coordinates=route["coordinates"],
+                route_coordinates=route_coordinates,
                 markers=markers,
                 logbook_days=logbook_days_transformed,
                 trip_summary={
