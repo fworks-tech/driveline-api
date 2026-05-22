@@ -1,4 +1,4 @@
-# API Contract — Spotter AI ELD & Route Planner
+﻿# API Contract — Spotter AI ELD & Route Planner
 
 **Version:** 1.0.0  
 **Status:** ✅ Alpha (stable core, implementation details may change)  
@@ -106,7 +106,7 @@ Given a driver's current location, a pickup location, and a dropoff location, ca
       "day": 1,
       "events": [
         {"status": "DRIVING", "start_minute": 0, "duration_minutes": 660, "label": "Driving"},
-        {"status": "ON_DUTY_ND", "start_minute": 660, "duration_minutes": 60, "label": "On-duty (Pickup)"},
+        {"status": "ON_DUTY_NOT_DRIVING", "start_minute": 660, "duration_minutes": 60, "label": "On-duty (Pickup)"},
         {"status": "DRIVING", "start_minute": 720, "duration_minutes": 300, "label": "Driving"},
         {"status": "OFF_DUTY", "start_minute": 1020, "duration_minutes": 420, "label": "Off-duty (Rest)"}
       ]
@@ -115,7 +115,7 @@ Given a driver's current location, a pickup location, and a dropoff location, ca
       "day": 2,
       "events": [
         {"status": "SLEEPER_BERTH", "start_minute": 0, "duration_minutes": 600, "label": "Sleeper berth (10-hr)"},
-        {"status": "ON_DUTY_ND", "start_minute": 600, "duration_minutes": 60, "label": "On-duty (Dropoff)"},
+        {"status": "ON_DUTY_NOT_DRIVING", "start_minute": 600, "duration_minutes": 60, "label": "On-duty (Dropoff)"},
         {"status": "OFF_DUTY", "start_minute": 660, "duration_minutes": 780, "label": "Off-duty (Remaining)"}
       ]
     }
@@ -162,7 +162,7 @@ Given a driver's current location, a pickup location, and a dropoff location, ca
 | `SLEEPER` | In sleeper berth (reserved for split-berth provision) | No (currently unused) |
 | `SLEEPER_BERTH` | Mandatory 10-hour rest reset in sleeper berth | Yes |
 | `DRIVING` | Actively driving vehicle | Yes |
-| `ON_DUTY_ND` | On-duty but not driving (pickup, fuel, rest stops) | Yes |
+| `ON_DUTY_NOT_DRIVING` | On-duty but not driving (pickup, fuel, rest stops) | Yes |
 
 **trip_summary** (object)
 - `total_distance_miles`: Total trip distance in miles (float)
@@ -318,3 +318,4 @@ The delay is primarily from:
 - [Architecture](ARCHITECTURE.md) — System design and component layers
 - [HOS Engine Reference](HOS_ENGINE.md) — Deep dive into FMCSA HOS rule implementation
 - [OpenAPI Specification](openapi.yaml) — Machine-readable API schema
+

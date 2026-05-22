@@ -60,7 +60,7 @@ def mock_hos_result():
                         "label": "Driving",
                     },
                     {
-                        "status": "ON_DUTY_ND",
+                        "status": "ON_DUTY_NOT_DRIVING",
                         "start_hour": 11.0,
                         "end_hour": 12.0,
                         "label": "On-duty",

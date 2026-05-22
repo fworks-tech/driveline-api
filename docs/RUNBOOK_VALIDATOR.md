@@ -1,4 +1,4 @@
-# Runbook Validator — Documentation Quality Assurance
+﻿# Runbook Validator — Documentation Quality Assurance
 
 **Purpose:** Ensure documentation runbooks are accurate, up-to-date, and maintainable  
 **Location:** `scripts/validate_runbooks.py`  
@@ -96,7 +96,7 @@ Configure `CORS_ALLOWED_ORIGINS` in .env.example.
 
 **Exempt variables (no validation required):**
 - System vars: `HOME`, `PATH`, `USER`, `PWD`, `SHELL`, `LANG`
-- FMCSA enums: `DRIVING`, `OFF_DUTY`, `ON_DUTY_ND`, `SLEEPER`, `SLEEPER_BERTH`
+- FMCSA enums: `DRIVING`, `OFF_DUTY`, `ON_DUTY_NOT_DRIVING`, `SLEEPER`, `SLEEPER_BERTH`
 - HTTP methods: `POST`, `GET`, `PUT`, `DELETE`, `PATCH`
 - Framework-specific: `VITE_API_URL`
 
@@ -424,3 +424,4 @@ exempt_vars = {
 **Tool Status:** ✅ Active  
 **Last Updated:** 2026-05-21  
 **Maintained by:** Backend team
+

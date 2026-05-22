@@ -1,4 +1,4 @@
-# Backend Architecture — Spotter AI ELD & Route Planner
+﻿# Backend Architecture — Spotter AI ELD & Route Planner
 
 **Document Purpose:** Source of truth for backend system design  
 **Audience:** Developers, architects, AI agents  
@@ -180,12 +180,12 @@ spotter-eld-logging-api/
 ```
 1. ON-DUTY AT PICKUP/DROPOFF
    └─ 1-hour minimum on-duty time at each location
-   └─ Status: ON_DUTY_ND (on-duty, not driving)
+   └─ Status: ON_DUTY_NOT_DRIVING (on-duty, not driving)
 
 2. FUEL STOP RULE
    └─ Mandatory fuel stop every 1,000 miles
    └─ Duration: 30 minutes (included in on-duty)
-   └─ Status: ON_DUTY_ND (on-duty, not driving)
+   └─ Status: ON_DUTY_NOT_DRIVING (on-duty, not driving)
 
 3. 11-HOUR DRIVING LIMIT
    └─ Maximum 11 hours of driving per 14-hour window
@@ -195,7 +195,7 @@ spotter-eld-logging-api/
 4. 14-HOUR WINDOW
    └─ Maximum 14 hours on-duty + driving per day
    └─ Resets after 10-hour off-duty period
-   └─ Status: DRIVING + ON_DUTY_ND counted
+   └─ Status: DRIVING + ON_DUTY_NOT_DRIVING counted
 
 5. 30-MINUTE BREAK
    └─ Mandatory 30-minute break after 8 hours driving
@@ -248,7 +248,7 @@ class DutyStatus(Enum):
     OFF_DUTY = "OFF_DUTY"           # Not working (sleep, meal, etc)
     SLEEPER = "SLEEPER"             # In sleeper berth
     DRIVING = "DRIVING"             # Actively driving
-    ON_DUTY_ND = "ON_DUTY_ND"       # On-duty not driving (pickup, fuel, etc)
+    ON_DUTY_NOT_DRIVING = "ON_DUTY_NOT_DRIVING"       # On-duty not driving (pickup, fuel, etc)
 ```
 
 ---
@@ -1055,3 +1055,4 @@ LOGGING = {
 **Last Review:** 2026-05-20  
 **Maintained by:** Backend team  
 **AI Agent Reference:** ✅ Approved for agent automation
+

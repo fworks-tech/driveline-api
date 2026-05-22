@@ -1,4 +1,4 @@
-# Frontend Integration Guide
+﻿# Frontend Integration Guide
 
 **Audience:** Frontend developers (React/Vite team) integrating with the Spotter ELD API  
 **Related Projects:** [`spotter-eld-logging-app`](https://github.com/fworks-tech/spotter-eld-logging-app) (React 19 + Vite)  
@@ -103,7 +103,7 @@ interface LogbookDay {
 }
 
 interface LogbookEvent {
-  status: "OFF_DUTY" | "SLEEPER" | "SLEEPER_BERTH" | "DRIVING" | "ON_DUTY_ND";
+  status: "OFF_DUTY" | "SLEEPER" | "SLEEPER_BERTH" | "DRIVING" | "ON_DUTY_NOT_DRIVING";
   start_minute: number;      // Minutes since midnight (0–1440)
   duration_minutes: number;  // Duration in minutes
   label: string;             // Human-readable description
@@ -172,7 +172,7 @@ interface TripSummary {
           "label": "Driving"
         },
         {
-          "status": "ON_DUTY_ND",
+          "status": "ON_DUTY_NOT_DRIVING",
           "start_minute": 660,
           "duration_minutes": 60,
           "label": "On-duty (Pickup)"
@@ -201,7 +201,7 @@ interface TripSummary {
           "label": "Sleeper berth (10-hr)"
         },
         {
-          "status": "ON_DUTY_ND",
+          "status": "ON_DUTY_NOT_DRIVING",
           "start_minute": 600,
           "duration_minutes": 60,
           "label": "On-duty (Dropoff)"
@@ -409,3 +409,4 @@ The Swagger UI allows you to:
 - [Local Development Guide](LOCAL_DEVELOPMENT.md) — Step-by-step setup
 - [Architecture](ARCHITECTURE.md) — How the backend works internally
 - [OpenAPI Spec](openapi.yaml) — Machine-readable schema
+

@@ -1,4 +1,4 @@
-# Assessment Submission Checklist
+﻿# Assessment Submission Checklist
 
 **Project**: Spotter ELD - Trip Planner with FMCSA HOS Compliance
 **Date**: May 21, 2026
@@ -38,13 +38,13 @@
 ### ✅ HOS Engine Accuracy (FMCSA Rules)
 
 #### Rule 1: 1-hour on-duty at pickup and dropoff
-- [x] Pickup event: 1-hour ON_DUTY_ND labeled "Pickup"
-- [x] Dropoff event: 1-hour ON_DUTY_ND labeled "Dropoff"
+- [x] Pickup event: 1-hour ON_DUTY_NOT_DRIVING labeled "Pickup"
+- [x] Dropoff event: 1-hour ON_DUTY_NOT_DRIVING labeled "Dropoff"
 - [x] Tests verify: test_rule_1_pickup_and_dropoff_on_duty_events
 
 #### Rule 2: Fuel stop every 1,000 miles
 - [x] Fuel stops inserted every 1,000 miles
-- [x] Stop duration: 30 minutes (ON_DUTY_ND)
+- [x] Stop duration: 30 minutes (ON_DUTY_NOT_DRIVING)
 - [x] Tests verify: test_rule_2_fuel_stop_every_1000_miles
 
 #### Rule 3: 11-hour driving limit per shift
@@ -89,7 +89,7 @@
       "total_on_duty_hours": 13.0,
       "events": [
         {"status": "DRIVING", "start_time": "00:00", "end_time": "11:00", "duration_hours": 11.0, "label": "Driving to Pickup"},
-        {"status": "ON_DUTY_ND", "start_time": "11:00", "end_time": "12:00", "duration_hours": 1.0, "label": "Pickup", "location": "Pickup Location"},
+        {"status": "ON_DUTY_NOT_DRIVING", "start_time": "11:00", "end_time": "12:00", "duration_hours": 1.0, "label": "Pickup", "location": "Pickup Location"},
         {"status": "OFF_DUTY", "start_time": "12:00", "end_time": "24:00", "duration_hours": 12.0, "label": "Off Duty"}
       ]
     },
@@ -100,7 +100,7 @@
       "total_on_duty_hours": 9.0,
       "events": [
         {"status": "DRIVING", "start_time": "00:00", "end_time": "08:00", "duration_hours": 8.0, "label": "Driving to Dropoff"},
-        {"status": "ON_DUTY_ND", "start_time": "08:00", "end_time": "09:00", "duration_hours": 1.0, "label": "Dropoff", "location": "Dropoff Location"},
+        {"status": "ON_DUTY_NOT_DRIVING", "start_time": "08:00", "end_time": "09:00", "duration_hours": 1.0, "label": "Dropoff", "location": "Dropoff Location"},
         {"status": "OFF_DUTY", "start_time": "09:00", "end_time": "24:00", "duration_hours": 15.0, "label": "Off Duty"}
       ]
     }
@@ -204,3 +204,4 @@
 3. 🔄 **Frontend**: Verify Vercel deployment and VITE_API_URL
 4. 🔄 **Test**: End-to-end trip planning test
 5. 🎬 **Record**: Loom video for assessment submission
+
