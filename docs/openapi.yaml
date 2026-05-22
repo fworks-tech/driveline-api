@@ -79,19 +79,6 @@ paths:
                     type: string
                     description: JWT refresh token
           description: ''
-  /api/health/:
-    get:
-      operationId: health_retrieve
-      description: Simple liveness endpoint for container and deployment health checks.
-      tags:
-      - health
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HealthCheck'
-          description: ''
   /api/plan-route/:
     post:
       operationId: plan_route_create
@@ -435,7 +422,7 @@ paths:
           description: No response body
   /health/:
     get:
-      operationId: health_retrieve_2
+      operationId: health_retrieve
       description: Simple liveness endpoint for container and deployment health checks.
       tags:
       - health
