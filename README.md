@@ -8,6 +8,35 @@ Production-ready Django REST Framework API for the Spotter AI ELD & Route Planne
 
 > **v1.0.0 Released:** Core API functionality stable and production-ready. See [CHANGELOG.md](docs/CHANGELOG.md) and [Release Notes](https://github.com/fworks-tech/spotter-eld-logging-api/releases/tag/v1.0.0) for details.
 
+## Live Deployment
+
+**Production URL:** `https://spotter-eld-logging-api.onrender.com`  
+**Swagger UI:** `https://spotter-eld-logging-api.onrender.com/api/docs/`
+
+### Health Check
+```bash
+curl https://spotter-eld-logging-api.onrender.com/health/
+# Expected: 200 OK
+```
+
+### Example API Call
+```bash
+curl -X POST https://spotter-eld-logging-api.onrender.com/api/v1/plan-route/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "current_location": "Chicago, IL",
+    "pickup_location": "Denver, CO",
+    "dropoff_location": "Los Angeles, CA",
+    "cycle_hours_used": 20,
+    "trip_date": "2026-05-22",
+    "tractor_number": "TRAC-001",
+    "trailer_number": "TRAIL-001",
+    "shipper_name": "Acme Corp"
+  }'
+```
+
+---
+
 ## Quick Start
 
 ### Prerequisites
