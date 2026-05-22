@@ -1,4 +1,5 @@
 import time
+from unittest.mock import patch
 
 import pytest
 from django.core.cache import cache
@@ -271,3 +272,26 @@ class TestIntegration:
 
         with pytest.raises(CircuitOpenError):
             nominatim_breaker_test.call(nominatim_call)
+
+    def test_circuit_breaker_handles_cache_error_gracefully(self):
+        """Test that cache errors don't crash the circuit breaker."""
+        breaker = CircuitBreaker("cache_test")
+
+        with patch("trips.error_handler.cache.get") as mock_cache_get:
+            mock_cache_get.side_effect = Exception("Cache unavailable")
+
+            state = breaker.get_state()
+            assert state == CircuitBreaker.CLOSED
+
+    def test_circuit_breaker_handles_invalid_timestamp(self):
+        """Test that malformed timestamps are handled gracefully."""
+        breaker = CircuitBreaker("timestamp_test")
+        breaker_state_key = breaker._get_state_key()
+        breaker_opened_key = breaker._get_opened_at_key()
+
+        cache.set(breaker_state_key, CircuitBreaker.OPEN, None)
+        cache.set(breaker_opened_key, "invalid-timestamp", None)
+
+        state = breaker.get_state()
+        assert state == CircuitBreaker.CLOSED
+        assert cache.get(breaker_opened_key) is None
