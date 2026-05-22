@@ -97,7 +97,7 @@ python manage.py migrate               # Reapply
 
 ## Architecture
 
-### Request Flow: POST /api/v1/plan-route/
+### Request Flow: POST /api/plan-route/
 
 ```
 1. TripInputSerializer validates request
@@ -173,7 +173,7 @@ spotter-eld-logging-api/
 ### Core Modules
 
 **trips.views.PlanRouteView**
-- Single POST endpoint: `/api/v1/plan-route/`
+- Single POST endpoint: `/api/plan-route/`
 - Orchestrates: serialize → geocode → route → HOS simulate → respond
 
 **trips.serializers**
@@ -230,7 +230,7 @@ def test_serializer_rejects_negative_cycle_hours():
 @pytest.mark.integration
 def test_successful_route_planning_end_to_end(mock_nominatim_geocode, mock_osrm_get_route):
     data = {"current_location": "Chicago", ..., "cycle_hours_used": 30}
-    response = client.post("/api/v1/plan-route/", data)
+    response = client.post("/api/plan-route/", data)
     assert response.status_code == 200
     assert "logbook_days" in response.json()
 ```
