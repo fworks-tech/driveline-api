@@ -53,7 +53,8 @@ class RetryConfig:
 def with_retry(config: Optional[RetryConfig] = None) -> Callable:
     """Decorator that retries a function with exponential backoff and jitter.
 
-    Retries on transient errors (ConnectionError, etc.) but not on timeouts.
+    Retries on transient errors (ConnectionError, etc.) but not on timeouts or
+    bad responses. ValueError from bad API responses (empty results) is not retried.
 
     Args:
         config: RetryConfig with backoff settings. Defaults to 3 retries, 1s-8s delays.
@@ -72,7 +73,9 @@ def with_retry(config: Optional[RetryConfig] = None) -> Callable:
                     return func(*args, **kwargs)
                 except requests.exceptions.Timeout:
                     raise
-                except (ConnectionError, ValueError) as e:
+                except ValueError:
+                    raise
+                except ConnectionError as e:
                     last_exception = e
                     if attempt < config.max_retries:
                         delay = min(config.base_delay * (2**attempt), config.max_delay)
