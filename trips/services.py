@@ -49,6 +49,7 @@ class TripPlanningService:
             leg2_miles=leg2["distance_miles"],
             start_date=start_date,
             from_location=current_location,
+            pickup_location=pickup_location,
             to_location=dropoff_location,
         )
 
