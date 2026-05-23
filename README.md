@@ -1,81 +1,61 @@
 # Spotter AI ELD & Route Planner — Django Backend API
 
-**Status:** ✅ **v1.0.0 Released** (May 20, 2026)  
-**Backend Repository:** `spotter-eld-logging-api`  
-**Frontend Repository:** [`spotter-eld-logging-app`](https://github.com/fworks-tech/spotter-eld-logging-app)
+**Status:** v1.0.0 Released (May 20, 2026) | **Frontend:** [spotter-eld-logging-app](https://github.com/fworks-tech/spotter-eld-logging-app)
 
-Production-ready Django REST Framework API for the Spotter AI ELD & Route Planner application. Handles geocoding, route planning, and FMCSA Hours of Service (HOS) compliance calculations.
-
-> **v1.0.0 Released:** Core API functionality stable and production-ready. See [CHANGELOG.md](docs/CHANGELOG.md) and [Release Notes](https://github.com/fworks-tech/spotter-eld-logging-api/releases/tag/v1.0.0) for details.
+Production-ready Django REST Framework API handling geocoding, route planning, and FMCSA Hours of Service (HOS) compliance calculations.
 
 ## Quick Start
 
-### Prerequisites
-- Docker Desktop or Docker Engine with the Compose plugin
-- Node.js 18+ only if you also want to run the frontend
-
-### Backend Setup
-```powershell
-.\scripts\bootstrap_backend.ps1
-```
-
-This copies `.env.example` to `.env` if needed, builds the image, runs migrations, and starts PostgreSQL, Redis, and the Django API.
-
-If you prefer the raw compose command:
-
 ```bash
-docker compose up --build
+# Clone and start (Docker required)
+git clone https://github.com/fworks-tech/spotter-eld-logging-api.git
+cd spotter-eld-logging-api
+.\scripts\bootstrap_backend.ps1   # Windows — or: docker compose up --build
 ```
 
-API available at `http://localhost:8000`  
-Swagger UI: `http://localhost:8000/api/docs/`
+API: `http://localhost:8000` | Swagger UI: `http://localhost:8000/api/docs/`
 
-The backend runs at `http://localhost:8000`, the health check is at `http://localhost:8000/health/`, and PostgreSQL/Redis run as sibling services inside the Compose network.
+For non-Docker local setup or frontend integration, see [CLAUDE.md](CLAUDE.md).
 
-## Technology Stack
+## Tech Stack
 
-- **Framework:** Django 4.2 + Django REST Framework 3.15.1
-- **Database:** PostgreSQL via Docker Compose for local development
-- **APIs:** Nominatim (geocoding) + OSRM (routing)
-- **Testing:** pytest with 87% coverage
-- **Deployment:** Railway + Gunicorn
+- Django 4.2 + Django REST Framework 3.15
+- PostgreSQL (Docker Compose locally, Railway in production)
+- Nominatim (geocoding) + OSRM (routing)
+- pytest — 87% coverage
 
-## Documentation
+## Docs Index
 
-- **Getting Started**
-  - [Local Development Setup](docs/LOCAL_DEVELOPMENT.md) — Backend + frontend setup
-  - [PR Review Checklist](docs/PR_REVIEW_CHECKLIST.md) — Reviewer guidance for new pull requests
-  - [API Contract](docs/API_CONTRACT.md) — Request/response schemas
-  - [Deployment Strategy](../DEVOPS_STRATEGY.md) — Production setup
+| Document | Purpose |
+|----------|---------|
+| [CLAUDE.md](CLAUDE.md) | Commands, workflow standards, architecture overview |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Request flow, directory structure, component layers |
+| [docs/API_CONTRACT.md](docs/API_CONTRACT.md) | Request/response schemas, validation rules |
+| [docs/HOS_ENGINE.md](docs/HOS_ENGINE.md) | FMCSA rules reference, HOS simulation algorithm |
+| [docs/TESTING.md](docs/TESTING.md) | Test patterns, coverage, writing new tests |
+| [docs/PR_AUTOMATION.md](docs/PR_AUTOMATION.md) | PR labels/milestones automation + CI/CD workflows |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Railway deployment guide |
+| [docs/CHANGELOG.md](docs/CHANGELOG.md) | Release history |
+| [docs/openapi.yaml](docs/openapi.yaml) | Machine-readable OpenAPI spec |
 
-- **Technical Guides**
-  - [Architecture](docs/ARCHITECTURE.md) — System design and request flow
-  - [HOS Engine Reference](docs/HOS_ENGINE.md) — FMCSA compliance engine
-  - [Frontend Integration](docs/FRONTEND_INTEGRATION.md) — API integration guide
-  - [Testing Guide](docs/TESTING.md) — Test suites and CI/CD
+## Troubleshooting
 
-- **Quality & Validation**
-  - [OpenAPI Validation](docs/OPENAPI_VALIDATION.md) — Spec validation in CI/CD
-  - [Test Report Template](docs/TEST_REPORT_TEMPLATE.md) — Test metrics
+**Docker not starting** — Start Docker Desktop (Windows: ensure Linux engine is active), then re-run `docker compose up --build`.
 
-- **Reference**
-  - [OpenAPI Spec](docs/openapi.yaml) — Machine-readable schema
-  - [CHANGELOG](docs/CHANGELOG.md) — Release history
-  - [Onboarding Guide](../ONBOARDING.md) — Team onboarding
+**Port 8000/5432/6379 in use** — Stop the conflicting service or run `docker compose down -v` to wipe and restart.
+
+**Stale containers** — `docker compose down -v && docker compose up --build`
+
+**Missing `.env`** — `cp .env.example .env` then restart.
+
+**"No module named trips"** (non-Docker) — Activate venv: `venv\Scripts\activate && pip install -r requirements.txt`
+
+**CORS errors** — Add your frontend URL to `CORS_ALLOWED_ORIGINS` in `.env`.
 
 ## Contributing
 
-- Follow [Conventional Commits](https://www.conventionalcommits.org/)
-- Write tests (maintain 70%+ coverage)
-- Run `pytest trips/tests/ -v --cov=trips`
-- Create PR with test results
-
-## Support
-
-- **Issues:** [GitHub Issues](https://github.com/fworks-tech/spotter-eld-logging-api/issues)
-- **Email:** support@spotter-eld.app
-- **Frontend:** [spotter-eld-logging-app](https://github.com/fworks-tech/spotter-eld-logging-app)
+Follow [Conventional Commits](https://www.conventionalcommits.org/), maintain 70%+ test coverage, and open one PR per GitHub issue. See [CLAUDE.md](CLAUDE.md) for full workflow standards.
 
 ## License
 
-MIT License - See [LICENSE](LICENSE) file
+MIT License — see [LICENSE](LICENSE)

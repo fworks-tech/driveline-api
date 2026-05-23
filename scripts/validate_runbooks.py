@@ -180,7 +180,6 @@ class RunbookValidator:
 def find_runbooks(repo_root: Path) -> List[Path]:
     """Find all markdown runbook files in the repo."""
     runbook_patterns = [
-        "docs/LOCAL_DEVELOPMENT.md",
         "docs/TESTING.md",
         "docs/ARCHITECTURE.md",
         "docs/API_CONTRACT.md",
