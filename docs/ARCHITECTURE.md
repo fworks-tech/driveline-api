@@ -132,11 +132,11 @@ spotter-eld-logging-api/
 
 | Module | Responsibility |
 |--------|----------------|
-| `views.py` | HTTP request/response handling, orchestrates pipeline |
-| `serializers.py` | Input validation + output serialization |
-| `routing.py` | Nominatim geocoding + OSRM route calculation |
-| `hos_engine.py` | FMCSA HOS rule simulation |
-| `models.py` | Trip persistence (future) |
+| `trips/views.py` | HTTP request/response handling, orchestrates pipeline |
+| `trips/serializers.py` | Input validation + output serialization |
+| `trips/routing.py` | Nominatim geocoding + OSRM route calculation |
+| `trips/hos_engine.py` | FMCSA HOS rule simulation |
+| `trips/models.py` | Trip persistence (future) |
 
 ---
 
