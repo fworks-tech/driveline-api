@@ -56,12 +56,23 @@ The backend runs at `http://localhost:8000`, the health check is at `http://loca
 
 - **Quality & Validation**
   - [OpenAPI Validation](docs/OPENAPI_VALIDATION.md) — Spec validation in CI/CD
-  - [Test Report Template](docs/TEST_REPORT_TEMPLATE.md) — Test metrics
-
 - **Reference**
   - [OpenAPI Spec](docs/openapi.yaml) — Machine-readable schema
   - [CHANGELOG](docs/CHANGELOG.md) — Release history
   - [Onboarding Guide](../ONBOARDING.md) — Team onboarding
+
+## Pull Request Automation
+
+When a PR is opened, GitHub Actions automatically:
+
+- **Labels** the PR based on the title prefix (`feat(` → `type/feature`, `fix(` → `type/bug`, etc.)
+- **Assigns** the PR to the creator
+- **Sets milestone** from the linked issue
+- **Sets project board status** to "In Progress"
+
+Override manually with `gh pr edit <number> --add-label "priority/high"` etc.
+
+Required checks before merge: backend tests (70%+ coverage), lint (`black`/`isort`/`flake8`), OpenAPI validation.
 
 ## Contributing
 
