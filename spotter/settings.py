@@ -41,6 +41,8 @@ ALLOWED_HOSTS = [
 
 
 def _build_database_config(database_url: str) -> dict:
+    from django.core.exceptions import ImproperlyConfigured
+
     parsed = urlparse(database_url)
 
     if parsed.scheme in {"postgres", "postgresql"}:
@@ -53,31 +55,20 @@ def _build_database_config(database_url: str) -> dict:
             "PORT": parsed.port or "5432",
         }
 
-    if parsed.scheme == "sqlite":
-        sqlite_path = parsed.path or ""
-        if (
-            sqlite_path.startswith("/")
-            and len(sqlite_path) > 2
-            and sqlite_path[2] == ":"
-        ):
-            db_path = Path(sqlite_path.lstrip("/"))
-        elif sqlite_path.startswith("/"):
-            db_path = BASE_DIR / sqlite_path.lstrip("/")
-        elif sqlite_path:
-            db_path = BASE_DIR / sqlite_path
-        else:
-            db_path = BASE_DIR / "db.sqlite3"
+    raise ImproperlyConfigured(
+        f"Unsupported DATABASE_URL scheme '{parsed.scheme}'. "
+        "Only postgresql:// is supported. Set DATABASE_URL in your .env file."
+    )
 
-        return {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": db_path,
-        }
 
-    return {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if not DATABASE_URL:
+    from django.core.exceptions import ImproperlyConfigured
 
+    raise ImproperlyConfigured(
+        "DATABASE_URL environment variable is required. "
+        "Copy .env.example to .env and set a PostgreSQL connection string."
+    )
 
 INSTALLED_APPS = [
     "django.contrib.auth",
@@ -115,7 +106,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "spotter.wsgi.application"
 
-DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///db.sqlite3")
 DATABASES = {"default": _build_database_config(DATABASE_URL)}
 
 LANGUAGE_CODE = "en-us"
