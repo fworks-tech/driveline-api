@@ -453,6 +453,33 @@ pytest trips/tests/ -m "not slow" -v
 
 ---
 
+## Frontend & Full Stack Testing
+
+### Frontend Tests (React)
+
+```bash
+npm test                  # Unit tests (Jest)
+npm run test:coverage     # Unit tests with coverage
+npm run test:e2e          # E2E tests (requires backend on :8000)
+npm run test:e2e:ui       # E2E tests interactive UI
+npx playwright show-report
+```
+
+### Full Stack (3 terminals)
+
+```bash
+# Terminal 1
+python manage.py runserver 0.0.0.0:8000
+
+# Terminal 2
+cd ../spotter-eld-logging-app && npm run dev
+
+# Terminal 3
+npm run test:e2e
+```
+
+---
+
 ## Related Documentation
 
 - [Architecture](ARCHITECTURE.md) — System design and components
