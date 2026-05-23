@@ -74,6 +74,7 @@ def simulate_trip(
     leg2_miles: float,
     start_date: date | None = None,
     from_location: str = "Current Location",
+    pickup_location: str = "Pickup Location",
     to_location: str = "Dropoff Location",
 ) -> dict:
     """
@@ -310,13 +311,13 @@ def simulate_trip(
     drive_segment(leg1_hours, leg1_miles, "Driving to Pickup")
 
     # Pickup activity
-    do_on_duty_nd(PICKUP_HOURS, "Pickup", "Pickup Location")
+    do_on_duty_nd(PICKUP_HOURS, "Pickup", pickup_location)
 
     # Leg 2: Pickup -> Dropoff
     drive_segment(leg2_hours, leg2_miles, "Driving to Dropoff")
 
     # Dropoff activity
-    do_on_duty_nd(DROPOFF_HOURS, "Dropoff", "Dropoff Location")
+    do_on_duty_nd(DROPOFF_HOURS, "Dropoff", to_location)
 
     # ------------------------------------------------------------------ group by day
 
