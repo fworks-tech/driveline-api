@@ -42,6 +42,8 @@ The backend runs at `http://localhost:8000`, the health check is at `http://loca
 
 ## Documentation
 
+> Full documentation index: [DOCS.md](DOCS.md)
+
 - **Getting Started**
   - [Local Development Setup](docs/LOCAL_DEVELOPMENT.md) — Backend + frontend setup
   - [PR Review Checklist](docs/PR_REVIEW_CHECKLIST.md) — Reviewer guidance for new pull requests
