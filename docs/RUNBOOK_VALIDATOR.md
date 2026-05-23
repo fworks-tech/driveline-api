@@ -416,7 +416,7 @@ exempt_vars = {
 ## Related Documentation
 
 - [TESTING.md](TESTING.md) — Test running and coverage
-- [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md) — Setup guide (validated by this tool)
+- [README.md](../README.md) — Setup guide and troubleshooting
 - [ARCHITECTURE.md](ARCHITECTURE.md) — System design (validated by this tool)
 
 ---

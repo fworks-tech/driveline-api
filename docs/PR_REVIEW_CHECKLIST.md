@@ -32,7 +32,7 @@ Use this checklist when preparing a pull request description or reviewing change
 ## Documentation
 
 - [ ] `README.md` reflects the current setup.
-- [ ] `docs/LOCAL_DEVELOPMENT.md` is updated when the local setup changes.
+- [ ] `README.md` Troubleshooting section is updated when the local setup changes.
 - [ ] Any API contract changes are reflected in the frontend integration docs.
 - [ ] Follow-up work is captured as linked issues when needed.# PR Review Checklist
 
@@ -68,6 +68,6 @@ Use this checklist when preparing a pull request description or reviewing change
 ## Documentation
 
 - [ ] `README.md` reflects the current setup.
-- [ ] `docs/LOCAL_DEVELOPMENT.md` is updated when the local setup changes.
+- [ ] `README.md` Troubleshooting section is updated when the local setup changes.
 - [ ] Any API contract changes are reflected in the frontend integration docs.
 - [ ] Follow-up work is captured as linked issues when needed.

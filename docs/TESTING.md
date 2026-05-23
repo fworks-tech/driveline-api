@@ -1,45 +1,9 @@
 # Testing Guide — Spotter ELD API
 
-**Audience:** Developers running tests locally and understanding test coverage  
+**Audience:** Developers writing or running tests  
 **Last Updated:** 2026-05-20
 
-Complete guide to testing the backend API with unit tests, integration tests, and coverage reporting.
-
----
-
-## Quick Start
-
-### Run All Tests
-
-```bash
-# Activate virtual environment
-venv\Scripts\activate
-
-# Run all tests with coverage
-pytest trips/tests/ -v --cov=trips --cov-report=html
-
-# Open coverage report
-start htmlcov/index.html
-```
-
-### Run Specific Test Suite
-
-```bash
-# Integration tests (connect to actual external APIs)
-pytest trips/tests/test_integration.py -v -m integration
-
-# Unit tests only (with mocks)
-pytest trips/tests/ -v -m unit
-
-# Single test file
-pytest trips/tests/test_api_endpoint.py -v
-
-# Single test class
-pytest trips/tests/test_integration.py::TestTripPlanningIntegration -v
-
-# Single test method
-pytest trips/tests/test_integration.py::TestTripPlanningIntegration::test_successful_route_planning_end_to_end -v
-```
+Test commands are in [CLAUDE.md](../CLAUDE.md#testing). CI/CD integration is in [PR_AUTOMATION.md](PR_AUTOMATION.md).
 
 ---
 
@@ -75,70 +39,6 @@ trips/tests/
 - Verify request validation
 - Check response structure
 - Example: `test_invalid_location_returns_400()`
-
----
-
-## Running Tests Locally
-
-### Prerequisites
-
-```bash
-# Create virtual environment
-python -m venv venv
-venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### Run Tests
-
-#### Full Test Suite
-```bash
-pytest trips/tests/ -v --cov=trips --cov-report=html --cov-report=term-missing
-```
-
-**Output:**
-```
-tests/test_integration.py::TestTripPlanningIntegration::test_successful_route_planning_end_to_end PASSED
-tests/test_integration.py::TestTripPlanningIntegration::test_invalid_location_returns_400 PASSED
-tests/test_api_endpoint.py::TestPlanRouteAPI::test_validation_errors PASSED
-...
-====== 18 passed in 2.34s ======
-
-coverage report:
-Name                  Stmts   Miss  Cover
--------------------------------------------
-trips/__init__.py         0      0   100%
-trips/views.py           25      3    88%
-trips/serializers.py     18      2    89%
-trips/routing.py         32      4    87%
-trips/hos_engine.py      64      8    87%
--------------------------------------------
-TOTAL                   139     17    87%
-```
-
-#### With Watch Mode
-```bash
-pytest trips/tests/ -v --cov=trips --watch
-```
-
-Auto-reruns tests when files change.
-
-#### Single Test File
-```bash
-pytest trips/tests/test_integration.py -v
-```
-
-#### Filter by Test Name
-```bash
-pytest trips/tests/ -k "route_planning" -v
-```
-
-#### Show Print Statements
-```bash
-pytest trips/tests/ -v -s
-```
 
 ---
 
@@ -249,27 +149,6 @@ def test_successful_route_planning_end_to_end(mock_geocode, mock_route):
     assert 'logbook_days' in data
     assert 'trip_summary' in data
 ```
-
----
-
-## CI/CD Integration
-
-### GitHub Actions Workflow
-
-Automated tests run on every push/PR to `main` and `develop` branches.
-
-**Workflow: `.github/workflows/tests.yml`**
-
-Runs:
-1. ✅ Backend unit/integration tests with coverage
-2. ✅ Django system checks
-3. ✅ OpenAPI schema validation
-4. ✅ Type checking (mypy)
-5. ✅ Linting (flake8, black, isort)
-
-**View Results:**
-- GitHub Actions tab → Workflows → Backend Tests
-- Coverage reports uploaded to Codecov
 
 ---
 
@@ -455,6 +334,6 @@ pytest trips/tests/ -m "not slow" -v
 
 ## Related Documentation
 
+- [CLAUDE.md](../CLAUDE.md) — Test commands and setup
 - [Architecture](ARCHITECTURE.md) — System design and components
-- [Frontend Integration Guide](FRONTEND_INTEGRATION.md) — API contract
-- [Local Development](LOCAL_DEVELOPMENT.md) — Setup and running tests locally
+- [PR_AUTOMATION.md](PR_AUTOMATION.md) — CI/CD workflows

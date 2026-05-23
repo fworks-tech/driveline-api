@@ -104,21 +104,47 @@ gh pr edit 37 --milestone "v.1.0.0"
 
 ## CI/CD Integration
 
-### Required Checks Before Merge:
+### GitHub Actions Workflows
 
-1. ✅ **Backend Tests** - All tests pass with 70%+ coverage
-2. ✅ **Type Check** - mypy/type checking passes
-3. ✅ **Lint** - black, isort, flake8 pass
-4. ✅ **OpenAPI Validation** - Spec matches implementation
-5. ✅ **Code Review** - At least one approval
+Located in `.github/workflows/`:
 
-### Automatic Failure Handling:
+| Workflow | Trigger | What it runs |
+|----------|---------|-------------|
+| `tests.yml` | Push/PR to main, develop | pytest + 70% coverage check, Django system check, linting (black, isort, flake8) |
+| `openapi-validation.yml` | Push/PR to main, develop | Generates schema from code, compares to `docs/openapi.yaml`, fails on mismatch |
+| `release.yml` | Git tag push | Production deployment pipeline |
+
+### Required Checks Before Merge
+
+1. ✅ **Backend Tests** — All tests pass with 70%+ coverage
+2. ✅ **Lint** — black, isort, flake8 pass
+3. ✅ **OpenAPI Validation** — Spec matches implementation
+4. ✅ **Code Review** — At least one approval
+
+### OpenAPI Validation Workflow
+
+The spec at `docs/openapi.yaml` must always match the code. When you add or change an endpoint:
+
+```bash
+# 1. Generate schema from your code
+python manage.py spectacular --file schema.json
+
+# 2. Compare against the committed spec
+python scripts/validate_openapi.py docs/openapi.yaml schema.json
+
+# 3. If mismatch: update docs/openapi.yaml, then commit
+git add docs/openapi.yaml
+git commit -m "docs(openapi): update spec for <endpoint change>"
+```
+
+CI runs steps 1–2 automatically and fails the PR if they don't match.
+
+### Automatic Failure Handling
 
 If any check fails:
-1. PR is marked with ❌ status indicator
-2. Details are available in GitHub Actions tab
-3. Fix the issue and push a new commit
-4. Checks re-run automatically
+1. PR is marked ❌ in the GitHub checks UI
+2. Details in the GitHub Actions tab → relevant workflow run
+3. Fix and push a new commit — checks re-run automatically
 
 ---
 

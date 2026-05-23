@@ -369,7 +369,7 @@ Breakdown:
 
 ## Local Development Setup
 
-For complete step-by-step setup of backend + frontend together, see [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md).
+For backend setup, see [README.md](../README.md#quick-start). For the full frontend setup, follow the steps below.
 
 **Quick start (assuming backend running on 8000):**
 
@@ -406,7 +406,7 @@ The Swagger UI allows you to:
 ## Related Documentation
 
 - [API Contract](API_CONTRACT.md) — Authoritative request/response schemas
-- [Local Development Guide](LOCAL_DEVELOPMENT.md) — Step-by-step setup
+- [README.md](../README.md) — Quick start and troubleshooting
 - [Architecture](ARCHITECTURE.md) — How the backend works internally
 - [OpenAPI Spec](openapi.yaml) — Machine-readable schema
 
