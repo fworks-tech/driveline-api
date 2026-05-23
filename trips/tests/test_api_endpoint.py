@@ -405,6 +405,7 @@ class TestMarkerGeneration(TestCase):
     def setUp(self):
         """Initialize test client."""
         self.client = Client()
+        self.endpoint = "/api/plan-route/"
 
     @patch("trips.services.geocode")
     @patch("trips.services.get_route")
