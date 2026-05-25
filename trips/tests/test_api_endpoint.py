@@ -77,6 +77,7 @@ class TestPlanRouteAPI(TestCase):
                     ],
                     "total_driving_hours": 11.0,
                     "total_on_duty_hours": 11.0,
+                    "cycle_hours_after_day": 11.0,
                     "daily_miles": 850.0,
                     "cumulative_miles": 850.0,
                     "row_totals": {

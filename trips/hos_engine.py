@@ -434,6 +434,7 @@ def simulate_trip(
                 "events": day_events_filled,
                 "total_driving_hours": round(day_drive, 2),
                 "total_on_duty_hours": round(day_on_duty, 2),
+                "cycle_hours_after_day": round(state["cycle_hours"], 2),
                 "daily_miles": round(day_miles, 1),
                 "cumulative_miles": round(cumulative_miles, 1),
                 "row_totals": {
