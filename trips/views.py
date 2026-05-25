@@ -133,6 +133,7 @@ class PlanRouteView(APIView):
                         "cumulative_miles": day["cumulative_miles"],
                         "total_driving_hours": day["total_driving_hours"],
                         "total_on_duty_hours": day["total_on_duty_hours"],
+                        "cycle_hours_after_day": day["cycle_hours_after_day"],
                         "row_totals": day["row_totals"],
                         "events": events_transformed,
                     }
