@@ -79,6 +79,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Run tests
+        env:
+          DJANGO_SETTINGS_MODULE: driveline.settings
+          DATABASE_URL: sqlite:///test.db
+          DEBUG: 'True'
         run: |
           pip install -r requirements.txt
           pytest trips/tests/ -v --cov=trips --cov-report=term-only --cov-fail-under=70
@@ -86,9 +90,9 @@ jobs:
       - name: Check code quality
         run: |
           pip install black isort flake8
-          black --check .
-          isort --check-only .
-          flake8 . --exclude migrations/ --max-line-length=120
+          black --check driveline trips
+          isort --check-only driveline trips
+          flake8 driveline trips --exclude migrations/ --max-line-length=120
 
   create-release:
     needs: test-image
