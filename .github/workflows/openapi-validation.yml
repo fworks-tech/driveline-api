@@ -5,7 +5,7 @@ on:
     branches: [main, develop]
     paths:
       - 'backend/docs/openapi.yaml'
-      - 'spotter/**/*.py'
+      - 'driveline/**/*.py'
       - 'trips/**/*.py'
       - 'requirements.txt'
       - 'scripts/validate_openapi.py'
@@ -14,7 +14,7 @@ on:
     branches: [main, develop]
     paths:
       - 'backend/docs/openapi.yaml'
-      - 'spotter/**/*.py'
+      - 'driveline/**/*.py'
       - 'trips/**/*.py'
       - 'requirements.txt'
       - 'scripts/validate_openapi.py'
@@ -43,7 +43,7 @@ jobs:
         run: |
           python manage.py spectacular --file /tmp/generated_schema.json --format openapi-json
         env:
-          DJANGO_SETTINGS_MODULE: spotter.settings
+          DJANGO_SETTINGS_MODULE: driveline.settings
           DEBUG: 'True'
 
       - name: Validate schema format

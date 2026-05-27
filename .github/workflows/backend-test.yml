@@ -20,7 +20,7 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_DB: spotter_test
+          POSTGRES_DB: driveline_test
           POSTGRES_PASSWORD: testpass123
         options: >-
           --health-cmd pg_isready
@@ -52,7 +52,7 @@ jobs:
         working-directory: backend
         env:
           DEBUG: 'False'
-          DATABASE_URL: postgresql://postgres:testpass123@localhost:5432/spotter_test
+          DATABASE_URL: postgresql://postgres:testpass123@localhost:5432/driveline_test
           DJANGO_SECRET_KEY: test-secret-key-do-not-use-in-production
         run: |
           python manage.py migrate --noinput
@@ -61,7 +61,7 @@ jobs:
         working-directory: backend
         env:
           DEBUG: 'False'
-          DATABASE_URL: postgresql://postgres:testpass123@localhost:5432/spotter_test
+          DATABASE_URL: postgresql://postgres:testpass123@localhost:5432/driveline_test
           DJANGO_SECRET_KEY: test-secret-key-do-not-use-in-production
         run: |
           coverage run --source='.' manage.py test --no-input --verbosity=2 trips
