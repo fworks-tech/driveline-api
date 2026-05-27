@@ -144,7 +144,7 @@ CACHES = {
             if REDIS_URL
             else "django.core.cache.backends.locmem.LocMemCache"
         ),
-        "LOCATION": REDIS_URL or "spotter-local-cache",
+        "LOCATION": REDIS_URL or "driveline-local-cache",
     }
 }
 
@@ -234,7 +234,7 @@ SIMPLE_JWT = {
 
 SPECTACULAR_SETTINGS = {
     "SCHEMA_PATH_PREFIX": r"/api/",
-    "TITLE": "Spotter AI ELD & Route Planner API",
+    "TITLE": "Driveline ELD & Route Planner API",
     "DESCRIPTION": "Production REST API for trip planning with FMCSA HOS compliance.",
     "VERSION": "1.0.0",
     "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
