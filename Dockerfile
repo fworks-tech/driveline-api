@@ -18,4 +18,4 @@ RUN chmod +x /app/scripts/docker-entrypoint.sh
 EXPOSE 8000
 
 ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]
-CMD ["gunicorn", "spotter.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "driveline.wsgi:application", "--bind", "0.0.0.0:8000"]

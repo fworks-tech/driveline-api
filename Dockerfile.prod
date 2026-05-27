@@ -23,7 +23,7 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH=/home/appuser/.local/bin:$PATH \
-    DJANGO_SETTINGS_MODULE=spotter.settings
+    DJANGO_SETTINGS_MODULE=driveline.settings
 
 WORKDIR /app
 
@@ -51,4 +51,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:8000/health/', timeout=5)" || exit 1
 
 ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]
-CMD ["gunicorn", "spotter.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4", "--worker-class", "sync", "--max-requests", "1000", "--max-requests-jitter", "100"]
+CMD ["gunicorn", "driveline.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4", "--worker-class", "sync", "--max-requests", "1000", "--max-requests-jitter", "100"]

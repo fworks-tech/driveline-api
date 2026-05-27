@@ -98,7 +98,7 @@ MIDDLEWARE = [
     "trips.middleware.ErrorHandlingMiddleware",
 ]
 
-ROOT_URLCONF = "spotter.urls"
+ROOT_URLCONF = "driveline.urls"
 
 TEMPLATES = [
     {
@@ -113,7 +113,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "spotter.wsgi.application"
+WSGI_APPLICATION = "driveline.wsgi.application"
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///db.sqlite3")
 DATABASES = {"default": _build_database_config(DATABASE_URL)}
