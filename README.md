@@ -1,6 +1,6 @@
-# Spotter AI ELD & Route Planner — Django Backend API
+# Driveline ELD & Route Planner — Django Backend API
 
-**Status:** v1.0.0 Released (May 20, 2026) | **Frontend:** [spotter-eld-logging-app](https://github.com/fworks-tech/spotter-eld-logging-app)
+**Status:** v1.6.0 Released (May 2026) | **Frontend:** [driveline-app](https://github.com/fworks-tech/driveline-app)
 
 Production-ready Django REST Framework API handling geocoding, route planning, and FMCSA Hours of Service (HOS) compliance calculations.
 
@@ -8,8 +8,8 @@ Production-ready Django REST Framework API handling geocoding, route planning, a
 
 ```bash
 # Clone and start (Docker required)
-git clone https://github.com/fworks-tech/spotter-eld-logging-api.git
-cd spotter-eld-logging-api
+git clone https://github.com/fworks-tech/driveline-api.git
+cd driveline-api
 .\scripts\bootstrap_backend.ps1   # Windows — or: docker compose up --build
 ```
 

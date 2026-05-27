@@ -1,10 +1,10 @@
-﻿# API Contract — Spotter AI ELD & Route Planner
+﻿# API Contract — Driveline ELD & Route Planner
 
 **Version:** 1.0.0  
 **Status:** ✅ Alpha (stable core, implementation details may change)  
 **Last Updated:** 2026-05-20
 
-This document defines the definitive API contract for the Spotter ELD & Route Planner backend. Use this as the authoritative reference for request/response formats, validation rules, and error handling.
+This document defines the definitive API contract for the Driveline ELD & Route Planner backend. Use this as the authoritative reference for request/response formats, validation rules, and error handling.
 
 ---
 
@@ -15,7 +15,7 @@ This document defines the definitive API contract for the Spotter ELD & Route Pl
 | Environment | URL |
 |---|---|
 | **Development** | `http://localhost:8000` |
-| **Production** | `https://api.spotter-eld.app` |
+| **Production** | `https://api.driveline.app` |
 | **Staging** | `https://staging-api.railway.app` |
 
 ### Authentication

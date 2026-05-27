@@ -1,6 +1,6 @@
 # Production Deployment Guide
 
-**Project**: Spotter ELD - Trip Planner with FMCSA HOS Compliance
+**Project**: Driveline - Trip Planner with FMCSA HOS Compliance
 **Target Platforms**: Railway, Render, AWS, Google Cloud, Azure
 
 ## Quick Start: Railway Deployment
@@ -16,7 +16,7 @@ Railway is the recommended platform for v1.1.0 submission due to ease of setup a
 
 1. Go to [Railway Dashboard](https://railway.app/dashboard)
 2. Click **"New Project"** → **"Deploy from GitHub repo"**
-3. Authorize GitHub and select `spotter-eld-logging-api` repo
+3. Authorize GitHub and select `driveline-api` repo
 4. Railway will auto-detect the `Dockerfile.prod`
 
 ### Step 2: Configure Environment Variables
@@ -39,7 +39,7 @@ REDIS_URL=redis://user:password@host:port
 CORS_ALLOWED_ORIGINS=https://frontend.vercel.app
 
 # API Configuration
-API_USER_AGENT=SpotterELD/1.0 (support@spotter-eld.app)
+API_USER_AGENT=SpotterELD/1.0 (support@driveline.app)
 
 # Logging
 LOG_LEVEL=INFO
@@ -99,7 +99,7 @@ curl -X POST https://your-railway-domain/api/plan-route/ \
 
 ```bash
 # Build production image locally
-docker build -f Dockerfile.prod -t spotter-eld:latest .
+docker build -f Dockerfile.prod -t driveline:latest .
 
 # Run container locally
 docker run -it \
@@ -108,7 +108,7 @@ docker run -it \
   -e DATABASE_URL=postgresql://user:pass@db:5432/spotter \
   -e REDIS_URL=redis://redis:6379/0 \
   -p 8000:8000 \
-  spotter-eld:latest
+  driveline:latest
 
 # Test endpoint
 curl http://localhost:8000/health/
@@ -122,17 +122,17 @@ Images are automatically built and pushed on git tags.
 
 ```bash
 # Build
-docker build -f Dockerfile.prod -t ghcr.io/fworks-tech/spotter-eld-logging-api:v1.0.0 .
+docker build -f Dockerfile.prod -t ghcr.io/fworks-tech/driveline-api:v1.0.0 .
 
 # Push (requires GHCR_TOKEN)
 echo $GHCR_TOKEN | docker login ghcr.io -u <username> --password-stdin
-docker push ghcr.io/fworks-tech/spotter-eld-logging-api:v1.0.0
+docker push ghcr.io/fworks-tech/driveline-api:v1.0.0
 ```
 
 #### Pull from GHCR
 
 ```bash
-docker pull ghcr.io/fworks-tech/spotter-eld-logging-api:v1.0.0
+docker pull ghcr.io/fworks-tech/driveline-api:v1.0.0
 ```
 
 ## Automated Releases
@@ -175,15 +175,15 @@ This triggers:
 Push to Docker Hub instead of GHCR:
 
 ```bash
-docker tag spotter-eld:latest youruser/spotter-eld:latest
-docker push youruser/spotter-eld:latest
+docker tag driveline:latest youruser/driveline:latest
+docker push youruser/driveline:latest
 ```
 
 Update `REGISTRY` in `.github/workflows/docker-build-push.yml`:
 
 ```yaml
 REGISTRY: docker.io
-IMAGE_NAME: youruser/spotter-eld-logging-api
+IMAGE_NAME: youruser/driveline-api
 ```
 
 ## Production Checklist
@@ -238,8 +238,8 @@ If a deployment fails:
 1. Railway: Click **"Rollback"** button on previous deployment
 2. GHCR: Redeploy previous image version:
    ```bash
-   docker pull ghcr.io/fworks-tech/spotter-eld-logging-api:v1.0.0  # previous version
-   docker tag ghcr.io/fworks-tech/spotter-eld-logging-api:v1.0.0 spotter-eld:latest
+   docker pull ghcr.io/fworks-tech/driveline-api:v1.0.0  # previous version
+   docker tag ghcr.io/fworks-tech/driveline-api:v1.0.0 driveline:latest
    docker run ...
    ```
 
@@ -289,7 +289,7 @@ railway logs -f
 railway run python manage.py shell
 
 # Via Docker locally
-docker run --rm -it spotter-eld:latest python manage.py shell
+docker run --rm -it driveline:latest python manage.py shell
 ```
 
 ### Reset Database
@@ -305,4 +305,4 @@ python manage.py migrate               # Reapply migrations
 
 - **Documentation**: See [ARCHITECTURE.md](ARCHITECTURE.md), [API_CONTRACT.md](API_CONTRACT.md)
 - **Issues**: Report via GitHub Issues
-- **Questions**: Contact support@spotter-eld.app
+- **Questions**: Contact support@driveline.app
