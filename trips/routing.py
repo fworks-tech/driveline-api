@@ -22,9 +22,7 @@ OSRM_URL = os.environ.get(
 )
 
 # User-Agent for external API requests (avoid personal email)
-USER_AGENT = os.environ.get(
-    "API_USER_AGENT", "Driveline/1.0 (support@driveline.app)"
-)
+USER_AGENT = os.environ.get("API_USER_AGENT", "Driveline/1.0 (support@driveline.app)")
 
 # API Request timeouts (seconds)
 NOMINATIM_TIMEOUT = int(os.environ.get("NOMINATIM_TIMEOUT", "10"))
