@@ -1,4 +1,4 @@
-# Backend Architecture — Spotter AI ELD & Route Planner
+# Backend Architecture — Driveline ELD & Route Planner
 
 **Purpose:** Source of truth for backend system design  
 **Audience:** Developers, architects  
@@ -46,8 +46,8 @@
 ## Directory Structure
 
 ```
-spotter-eld-logging-api/
-├── spotter/
+driveline-api/
+├── driveline/
 │   ├── settings.py              # Django configuration
 │   ├── urls.py                  # Root URL routing
 │   └── wsgi.py                  # WSGI entry point

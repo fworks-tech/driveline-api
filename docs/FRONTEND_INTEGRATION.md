@@ -1,7 +1,7 @@
 ﻿# Frontend Integration Guide
 
-**Audience:** Frontend developers (React/Vite team) integrating with the Spotter ELD API  
-**Related Projects:** [`spotter-eld-logging-app`](https://github.com/fworks-tech/spotter-eld-logging-app) (React 19 + Vite)  
+**Audience:** Frontend developers (React/Vite team) integrating with the Driveline API  
+**Related Projects:** [`driveline-app`](https://github.com/fworks-tech/driveline-app) (React 19 + Vite)  
 **Last Updated:** 2026-05-20
 
 This document explains how the frontend connects to the backend API, the request/response contract, and common integration patterns.
@@ -374,7 +374,7 @@ For backend setup, see [README.md](../README.md#quick-start). For the full front
 **Quick start (assuming backend running on 8000):**
 
 ```bash
-cd spotter-eld-logging-app/frontend
+cd driveline-app/frontend
 
 # Create .env.local
 echo "VITE_API_URL=http://localhost:8000" > .env.local
@@ -393,7 +393,7 @@ Frontend will be available at `http://localhost:3000` with automatic proxy to `h
 Interactive API documentation available at:
 - **Local:** http://localhost:8000/api/docs/ (Swagger UI)
 - **Staging:** https://staging-api.railway.app/api/docs/
-- **Production:** https://api.spotter-eld.app/api/docs/ (when available)
+- **Production:** https://api.driveline.app/api/docs/ (when available)
 
 The Swagger UI allows you to:
 - View the complete OpenAPI spec

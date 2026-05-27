@@ -1,4 +1,4 @@
-# Spotter ELD API Audit
+# Driveline API Audit
 
 **Date:** 2026-05-21  
 **Coverage:** Core API endpoints, security, performance, and code quality
@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-The Spotter ELD API is a well-architected Django REST framework application with strong error handling, caching, and infrastructure. Key strengths include circuit breakers for external APIs, structured logging, and rate limiting. However, several security and configuration hardening issues require attention before production.
+The Driveline API is a well-architected Django REST framework application with strong error handling, caching, and infrastructure. Key strengths include circuit breakers for external APIs, structured logging, and rate limiting. However, several security and configuration hardening issues require attention before production.
 
 **Risk Level:** Medium (non-critical, but should be addressed)
 
@@ -480,6 +480,6 @@ CORS_ALLOW_ALL_ORIGINS = not CORS_ALLOWED_ORIGINS  # Allow all if list empty
 
 ## Conclusion
 
-The Spotter ELD API is production-ready with **minor hardening** needed. Core architecture (error handling, caching, rate limiting, logging) is solid. Main action items are configuration (ALLOWED_HOSTS, CORS, env vars) and error message sanitization.
+The Driveline API is production-ready with **minor hardening** needed. Core architecture (error handling, caching, rate limiting, logging) is solid. Main action items are configuration (ALLOWED_HOSTS, CORS, env vars) and error message sanitization.
 
 **Estimated effort to production-ready:** 2-3 hours.

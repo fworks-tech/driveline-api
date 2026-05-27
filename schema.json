@@ -1,7 +1,7 @@
 {
     "openapi": "3.0.3",
     "info": {
-        "title": "Spotter AI ELD & Route Planner API",
+        "title": "Driveline ELD & Route Planner API",
         "version": "1.0.0",
         "description": "Production REST API for trip planning with FMCSA HOS compliance."
     },
