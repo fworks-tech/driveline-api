@@ -74,7 +74,7 @@ jobs:
         run: |
           echo "✓ Vercel deployment triggered"
           echo "  Version: ${{ needs.detect-release-type.outputs.version }}"
-          echo "  URL: https://driveline.app"
+          echo "  URL: https://driveline-eld-app.vercel.app"
           echo ""
           echo "ℹ️  Vercel auto-deploys on tag push"
           echo "ℹ️  Check Vercel dashboard for deployment status"
