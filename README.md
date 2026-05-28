@@ -33,7 +33,6 @@ For non-Docker local setup or frontend integration, see [CLAUDE.md](CLAUDE.md).
 | [docs/API_CONTRACT.md](docs/API_CONTRACT.md) | Request/response schemas, validation rules |
 | [docs/HOS_ENGINE.md](docs/HOS_ENGINE.md) | FMCSA rules reference, HOS simulation algorithm |
 | [docs/TESTING.md](docs/TESTING.md) | Test patterns, coverage, writing new tests |
-| [docs/PR_AUTOMATION.md](docs/PR_AUTOMATION.md) | PR labels/milestones automation + CI/CD workflows |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Railway deployment guide |
 | [docs/CHANGELOG.md](docs/CHANGELOG.md) | Release history |
 | [docs/openapi.yaml](docs/openapi.yaml) | Machine-readable OpenAPI spec |
