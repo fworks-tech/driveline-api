@@ -69,7 +69,7 @@ Railway will automatically:
 1. Build the Docker image from `Dockerfile.prod`
 2. Run migrations via `docker-entrypoint.sh`
 3. Start Gunicorn server on port 8000
-4. Assign a public domain (e.g., `spotter-api.railway.app`)
+4. Assign a public domain (e.g., `driveline-api.railway.app`)
 
 ### Step 6: Verify Deployment
 
@@ -105,7 +105,7 @@ docker build -f Dockerfile.prod -t driveline:latest .
 docker run -it \
   -e DEBUG=False \
   -e DJANGO_SECRET_KEY=your-secret \
-  -e DATABASE_URL=postgresql://user:pass@db:5432/spotter \
+  -e DATABASE_URL=postgresql://user:pass@db:5432/driveline \
   -e REDIS_URL=redis://redis:6379/0 \
   -p 8000:8000 \
   driveline:latest
@@ -157,7 +157,7 @@ This triggers:
 1. Create account and new **"Web Service"**
 2. Connect GitHub repository
 3. Set build command: `pip install -r requirements.txt`
-4. Set start command: `gunicorn spotter.wsgi:application --bind 0.0.0.0:8000`
+4. Set start command: `gunicorn driveline.wsgi:application --bind 0.0.0.0:8000`
 5. Add environment variables (same as Railway)
 6. Add PostgreSQL and Redis services
 7. Deploy
